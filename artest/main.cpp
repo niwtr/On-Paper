@@ -11,6 +11,8 @@
 #include <poppler/cpp/poppler-page.h>
 #include <poppler/cpp/poppler-page-renderer.h>
 #include <poppler/cpp/poppler-image.h>
+#include <cmath>
+#include <opencv/cv.hpp>
 
 using namespace cv;
 using namespace aruco;
@@ -178,6 +180,10 @@ void overlayImage(const cv::Mat &background, const cv::Mat &foreground,
 }
 
 int main(int argc, char **argv) {
+
+
+
+
     try {
 
         image = imread("../x-0.png");
@@ -186,7 +192,8 @@ int main(int argc, char **argv) {
         // read camera parameters if passed
         TheCameraParameters.readFromXMLFile("../camera.yml");
         float TheMarkerSize = 0.0565;
-
+        float len_mark = sqrt(TheMarkerSize*TheMarkerSize+TheMarkerSize*TheMarkerSize);
+        float len_a4 = sqrt(a4_height*a4_height+a4_width*a4_width);
 
         TheVideoCapturer.open(0);
 
@@ -239,13 +246,37 @@ int main(int argc, char **argv) {
                     Marker &lamaker = TheMarkers[i];
                     Point mcenter = lamaker.getCenter();
                     if (lamaker.size() == 4) {
-                        scaleROI(lamaker, mcenter, a4_width / TheMarkerSize, a4_height / TheMarkerSize);
-                        vector<Point2f> pv(lamaker.begin(), lamaker.end());
+
+                        vector<Point2f> pattern = {
+                                Point2f(-5,5),
+                                Point2f(5, 5),
+                                Point2f(5, -5),
+                                Point2f(-5, -5)
+                        };
+
+                        Mat M0=getPerspectiveTransform(pattern, lamaker);
+
+
+                        for (auto & i : pattern){
+                            i.x*=a4_width/TheMarkerSize;
+                            i.y*=a4_height/TheMarkerSize;
+                        }
+                        //pattern ok.
+                        vector<Point2f> pv;
+                        perspectiveTransform(pattern, pv, M0);//get a4-corners.
+
+
+                        for(auto i : lamaker)
+                            circle(TheInputImageCopy, i, 10, Scalar(0,255,0), 10);
+                        for(auto i : pv)
+                            circle(TheInputImageCopy, i, 10, Scalar(0,0,255), 10);
+
                         vector<Point2f> ps = {
+                                Point(image.cols, image.rows),
+                                Point(0, image.rows),
                                 Point(0, 0),
                                 Point(image.cols, 0),
-                                Point(image.cols, image.rows),
-                                Point(0, image.rows)
+
                         };
                         Mat M = getPerspectiveTransform(ps, pv);
                         Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
