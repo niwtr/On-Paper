@@ -1,60 +1,64 @@
 #include "HandDetector.h"
 
-void HandDetector::process(const Mat& src, Mat& des)
+HandDetector::HandDetector(int tar_width) :
+	_tar_width(tar_width)
 {
-	if (!des.data)
-		des.create(src.size(), CV_8UC1);
+	_bgsubtractor = createBackgroundSubtractorMOG2();
+	//_bgsubtractor->setVarThreshold(20);
 }
 
-template< ColorSpaceType color_type, int win_size>
-LcColorComputer<color_type, win_size>::LcColorComputer()
+void HandDetector::process(const Mat& src, Mat& dst)
 {
-	if (win_size == 1) dim = 3;
-	else
-	{
-		dim = win_size*win_size - (win_size - 2)*(win_size - 2);
-		dim = dim * 3;
-	}
-	bound = (win_size - 1) / 2;
+	if (!dst.data)
+		dst.create(src.size(), CV_8UC1);
+
+	Mat tmp;
+	resize(src, tmp, Size(_tar_width, _tar_width * 1.0 / dst.size().width * dst.size().height));
+
+	Mat tmp_color;
+	cvtColor(tmp, tmp_color, CV_BGR2YCrCb);
+
+	vector<Mat> tmp_colors;
+	split(tmp_color, tmp_colors);
+
+	Mat thd;
+	threshold(tmp_colors[1], thd, 0, 255, CV_THRESH_OTSU|CV_THRESH_BINARY);
+
+	medianBlur(thd, thd, 11);
+
+	//threashold_YCrCb(tmp_color, dst, thd);
+
+	
+	dst = thd;
+	//_bgsubtractor->apply(thd, dst, 0.01);
+
+	//vector<vector<Point> > contours;
+	//findContours(thd, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
+	//dst.create(thd.rows, thd.cols, CV_8UC1);
+	//for (int i = 0; i<contours.size(); i++) {
+	//	drawContours(dst, contours, i, Scalar(0), 3);
+	//}
 }
 
-template< ColorSpaceType color_type, int win_size>
-void LcColorComputer<color_type, win_size>::compute(Mat & src, vector<KeyPoint> & keypts, Mat & desc)
+void HandDetector::threashold_YCrCb(const Mat& src, Mat& dst, Mat& thd)
 {
-	double t = double(getTickCount());
+	dst.create(src.size(), CV_8UC1);
 
-	int code;
-	if (color_type == LC_YCrCb) code = CV_BGR2YCrCb;
-	else if (color_type == LC_HSV) code = CV_BGR2HSV_FULL;
-	else if (color_type == LC_LAB) code = CV_BGR2Lab;
-
-	Mat color;
-	cvtColor(src, color, code);
-
-	for (int k = 0; k<(int)keypts.size(); k++)
+	for (int i = 0; i < src.rows; i++)
 	{
-		int r = int(floor(.5 + keypts[k].pt.y) - floor(win_size*0.5));	// upper-left of patch
-		int c = int(floor(.5 + keypts[k].pt.x) - floor(win_size*0.5));
-		int a = 0;
-
-		for (int i = 0; i<win_size; i++)
+		for (int j = 0; j < src.cols; j++)
 		{
-			for (int j = 0; j<win_size; j++)
+			Vec3b ele = src.at<Vec3b>(i, j);
+			if(ele[0] > MIN_Y && ele[1] > MIN_Cr && ele[1] < MAX_Cr && ele[2] > MIN_Cb && ele[2] < MAX_Cb)
 			{
-				if (i == 0 || j == 0 || i == win_size - 1 || j == win_size - 1)
-				{
-					desc.at<float>(k, a + 0) = color.at<Vec3b>(r + i, c + j)(0) / 255.f;
-					desc.at<float>(k, a + 1) = color.at<Vec3b>(r + i, c + j)(1) / 255.f;
-					desc.at<float>(k, a + 2) = color.at<Vec3b>(r + i, c + j)(2) / 255.f;
-					a += 3;
-				}
+				dst.at<uchar>(i, j) = 255;
 			}
-		}
-	}
+			else
+			{
+				dst.at<uchar>(i, j) = 0;
+			}
 
-	if (0 && veb) {
-		t = (getTickCount() - t) / getTickFrequency();
-		if (color_type == LC_HSV)  cout << " copy HSV features:" << t << " secs." << endl;
-		else if (color_type == LC_LAB)  cout << " copy LAB features:" << t << " secs." << endl;
+		}
 	}
 }

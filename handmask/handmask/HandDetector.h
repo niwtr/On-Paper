@@ -10,29 +10,21 @@ enum ColorSpaceType {
 	LC_YCrCb, LC_LAB, LC_HSV
 };
 
-class LcFeatureComputer
-{
-public:
-	int dim;
-	int bound;
-	int veb;
-	bool use_motion;
-	virtual void compute(Mat & img, vector<KeyPoint> & keypts, Mat & desc) { ; }
-};
-
-template< ColorSpaceType color_type, int win_size>
-class LcColorComputer : public LcFeatureComputer
-{
-public:
-	LcColorComputer();
-	void compute(Mat & img, vector<KeyPoint> & keypts, Mat & desc);
-};
+#define MIN_Cr 135
+#define MAX_Cr 180
+#define MIN_Cb 85
+#define MAX_Cb 135
+#define MIN_Y 80
 
 class HandDetector
 {
 public:
+	HandDetector(int tar_width);
 	void process(const Mat& src, Mat& des);
 
+	void threashold_YCrCb(const Mat& src, Mat& dst, Mat& thd);
+
 private:
-	LcColorComputer<LC_HSV, 1> _cc;
+	int _tar_width;
+	Ptr<BackgroundSubtractorMOG2> _bgsubtractor;
 };
