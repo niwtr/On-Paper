@@ -54,13 +54,17 @@ namespace on_paper {
 
     private:
 
+        bool perform_anti_shake;
+
         MarkerDetector MDetector;
         VideoCapture TheVideoCapturer;
         vector<Marker> TheMarkers;
+        vector< Marker > TheLastMarkers;
         Mat TheInputImage, TheInputImageCopy;
         CameraParameters TheCameraParameters;
 
-        Marker last_marker;
+
+
         //the image (pdf paper) to display
         Mat image;
         /*
@@ -117,7 +121,7 @@ namespace on_paper {
         void map_markers (void);
 
         cv::Mat resize(const cv::Mat &in,int width);
-
+        void anti_shake(void);
     };
 
 }

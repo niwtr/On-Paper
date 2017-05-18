@@ -4,6 +4,9 @@
 
 #include "ar_capturer.h"
 
+
+
+
 void on_paper::ar_capturer::main_loop() {
     TheVideoCapturer.open(0);
     int waitTime=1;
@@ -23,22 +26,37 @@ void on_paper::ar_capturer::main_loop() {
         char key = 0;
         int index = 0;
         // capture until press ESC or until the end of the video
+
+        TheLastMarkers=MDetector.detect(TheInputImage, TheCameraParameters, TheMarkerSize);
+
+
         do {
 
             TheVideoCapturer.retrieve(TheInputImage);
             // copy image
             // Detection of markers in the image passed
             TheMarkers= MDetector.detect(TheInputImage, TheCameraParameters, TheMarkerSize);
-
+            if(perform_anti_shake)
+                anti_shake();
             // print marker info and draw the markers in image
             TheInputImage.copyTo(TheInputImageCopy);
 
             map_markers();
+            TheLastMarkers=TheMarkers;
             cv::imshow("ar", resize(TheInputImageCopy,1280));
 
             key = (char)cv::waitKey(1); // wait for key to be pressed
-            if(key=='s')  waitTime= waitTime==0?1:0;
+            if(key=='s')  {
+                waitTime= waitTime==0?1:0;
+            } else if(key == 'a'){
+                this->perform_anti_shake = (not this->perform_anti_shake);
+            }
             index++; // number of images captured
+
+            //更新上一帧图像的Marker
+            //TheInputImage.copyTo(ThePreImage);
+
+
         } while (key != 27 && (TheVideoCapturer.grab() ));
 
     } catch (std::exception &ex)
@@ -89,6 +107,7 @@ void on_paper::ar_capturer::init() {
     MDetector.setDictionary("ARUCO");
     MDetector.setThresholdParams(7, 7);
     MDetector.setThresholdParamRange(2, 0);
+    this->perform_anti_shake = false;
 
 }
 
@@ -255,4 +274,21 @@ vector<cv::Point2f> on_paper::ar_capturer::vector_avg2(const vector<cv::Point2f>
     return dst;
 }
 
+void on_paper::ar_capturer::anti_shake(void) {
+#define distance(a,b) (sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)))
+
+    for (unsigned int i = 0; i < TheMarkers.size()&&i<TheLastMarkers.size(); i++) {
+        Point center=TheMarkers[i].getCenter();
+        Point pre_center=TheLastMarkers[i].getCenter();
+        //cout<<center.x<<" "<<center.y<<endl;
+        //cout<<pre_center.x<<" "<<pre_center.y<<endl;
+        cout<<"distance"<<distance(center,pre_center)<<endl;
+        if(distance(center,pre_center)<10)
+            TheMarkers[i]=TheLastMarkers[i];
+    }
+
+
+}
+
+#undef distance
 
