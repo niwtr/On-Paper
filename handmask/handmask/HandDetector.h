@@ -23,7 +23,7 @@ enum ColorSpaceType {
 #define MIN_V 85
 #define MAX_V 160
 
-#define THRESHOLD_AREA 30
+#define THRESHOLD_AREA 20
 
 class HandDetector
 {

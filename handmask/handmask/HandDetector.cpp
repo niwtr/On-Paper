@@ -41,7 +41,7 @@ void HandDetector::process(const Mat& src, Mat& dst)
 	Mat src_std;
 	resize(src, src_std, Size(_tar_width, _tar_width * 1.0 / src.size().width * src.size().height));
 
-	dst = Mat::zeros(src_std.size(), CV_8UC1);
+	dst = Mat::zeros(src_std.size(), CV_8UC3);
 
 	cvtColor(src_std, src_std, CV_BGR2YCrCb);
 
@@ -58,7 +58,8 @@ void HandDetector::process(const Mat& src, Mat& dst)
 	bitwise_and(tmp, thd, img_and);
 
 	medianBlur(img_and, img_and, 7);
-
+	
+	//dst = img_and;
 	Mat img_edge;
 	Canny(img_and, img_edge, 50, 250);
 
@@ -155,38 +156,45 @@ void HandDetector::threashold_Y(const Mat& src, Mat& dst)
 	}
 }
 
+
 void HandDetector::hand_contours(const Mat& src, Mat& dst)
 {
 	vector<vector<Point> > contours;
 	findContours(src, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
 	vector<vector<Point> >hull(contours.size());
-	vector<vector<int>> hullsI(contours.size());
-	vector<vector<Vec4i>> defects(contours.size());
-
-	for (int i = 0; i < contours.size(); i++)
-	{
-		convexHull(Mat(contours[i]), hull[i], false);
-		convexHull(Mat(contours[i]), hullsI[i], false);
-		convexityDefects(Mat(contours[i]), hullsI[i], defects[i]);
-	}
-
+	vector<vector<int> > hullsI(contours.size());
+	vector<vector<Vec4i> > defects(contours.size());
+	vector<vector<Point> > approxCurve(contours.size());
 
 	for (int i = 0; i<contours.size(); i++) {
 		double area = contourArea(contours[i]);
 		if (area > THRESHOLD_AREA)
 		{
-			Scalar color = Scalar(255);
-			drawContours(dst, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point());
-			drawContours(dst, hull, i, color, 1, 8, vector<Vec4i>(), 0, Point());
+			Scalar color = Scalar(255, 255, 255);
 
-			//// draw defects
-			//size_t count = contours[i].size();
-			//if (count < 300)
-			//	continue;
+			// 道格拉斯-普克算法
+			approxPolyDP(Mat(contours[i]), approxCurve[i], 15, true);
 
+			// 计算闭包和凸缺陷
+			convexHull(Mat(contours[i]), hull[i], false);
+			convexHull(Mat(contours[i]), hullsI[i], false);
+			convexityDefects(Mat(contours[i]), hullsI[i], defects[i]);
+
+			// 画出轮廓和凸包
+			drawContours(dst, contours, i, color, 1);
+			//drawContours(dst, approxCurve, i, color, 1);
+			drawContours(dst, hull, i, color, 1);
+
+			// 画出凸包点
+			for (int j = 0; j < hullsI[i].size(); j++)
+			{
+				int idx = hullsI[i][j];
+				circle(dst, contours[i][idx], 3, Scalar(0, 255, 0), 2);
+			}
+
+			// 画出凸缺陷点
 			//vector<Vec4i>::iterator d = defects[i].begin();
-
 			//while (d != defects[i].end()) {
 			//	Vec4i& v = (*d);
 			//	int startidx = v[0];
@@ -195,14 +203,12 @@ void HandDetector::hand_contours(const Mat& src, Mat& dst)
 			//	Point ptEnd(contours[i][endidx]); // point of the contour where the defect ends
 			//	int faridx = v[2];
 			//	Point ptFar(contours[i][faridx]);// the farthest from the convex hull point within the defect
-			//	int depth = v[3]; // distance between the farthest point and the convex hull
+			//	int depth = v[3];					// distance between the farthest point and the convex hull
 
-			//	cout << depth << endl;
-
-			//	if (depth > 20 && depth < 80)
+			//	//if (depth > 20 && depth < 150)
 			//	{
-			//		line(dst, ptStart, ptFar, CV_RGB(0, 255, 0), 2);
-			//		line(dst, ptEnd, ptFar, CV_RGB(0, 255, 0), 2);
+			//		//line(dst, ptStart, ptFar, CV_RGB(0, 255, 0), 2);
+			//		//line(dst, ptEnd, ptFar, CV_RGB(0, 255, 0), 2);
 			//		circle(dst, ptStart, 4, Scalar(255, 0, 100), 2);
 			//		circle(dst, ptEnd, 4, Scalar(255, 0, 100), 2);
 			//		circle(dst, ptFar, 4, Scalar(100, 0, 255), 2);

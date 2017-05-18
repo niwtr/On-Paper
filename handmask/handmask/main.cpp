@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 	else
 	{
 		cout << "Testing Model...\n";
-		string video_name = root + "\\test.mp4";
+		string video_name = root + "\\test2.mp4";
 
 		VideoCapture cap;
 		cap.open(video_name);
