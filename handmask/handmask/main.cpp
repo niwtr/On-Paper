@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 		string video_name = root + "\\test.mp4";
 
 		VideoCapture cap;
-		cap.open(0);
+		cap.open(video_name);
 		if (!cap.isOpened()) {
 			cerr << "Error: cannot open camera\n";
 			return -1;
