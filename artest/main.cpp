@@ -14,6 +14,8 @@
 #include <cmath>
 #include <opencv/cv.hpp>
 
+
+
 using namespace cv;
 using namespace aruco;
 
@@ -110,8 +112,6 @@ void scaleROI(vector<Point2f> & v,
 
     bl.x = center.x - shiftX;
     bl.y = center.y + shiftY;
-
-
 }
 
 void white_transparent(const Mat & src, Mat& dst){
@@ -123,7 +123,7 @@ void white_transparent(const Mat & src, Mat& dst){
         {
             cv::Vec4b & pixel = dst.at<cv::Vec4b>(y, x);
             // if pixel is white
-            if (pixel[0] > 200 && pixel[1] > 200 && pixel[2] > 200)
+            if (pixel[0] > 250 && pixel[1] > 250 && pixel[2] > 250)
             {
                 // set alpha to zero:
                 pixel[3] = 0;
@@ -179,10 +179,47 @@ void overlayImage(const cv::Mat &background, const cv::Mat &foreground,
     }
 }
 
+//左上角的Marker: -0.36548, -0.40488
+//左下角的Marker：-0.36548, 0.40488
+//中上的Marker: 0， -0.16667
+//中下的Marker: 0，0.16667
+/**
+ * @brief 获取经过平移变换之后的pattern。
+ * 这是因为我们的Marker不在纸张的正中央。需要对纸张的原始pattern进行变换。
+ * @param ratio_x 水平方向平移的比率（左负右正）
+ * @param ratio_y 竖直平移的比率（上负下正）
+ * @param image 原图像
+ * @return 经过平移之后的pattern
+ */
+auto&& get_translation_pattern_s=[](float ratio_x, float ratio_y, const Mat& image) {
+    float rows= image.rows,
+            cols=image.cols;
+    float shifty = (rows*ratio_y),
+            shiftx=(cols*ratio_x);
+
+    vector<Point2f> ps ={
+            Point2f(cols+shiftx, rows+shifty),
+            Point2f(shiftx, rows+shifty),
+            Point2f(shiftx, shifty),
+            Point2f(cols+shiftx, shifty)
+    };
+    return std::move(ps);
+};
+#define S2(X) ((X)*(X))
+template<typename vecpf>
+float euclid_dist(const vecpf& v1, const vecpf& v2){
+    if(v1.size()!=v2.size())return -1;
+    float acc=0;
+    for(auto i = 0; i< v1.size();i++){
+        auto& p1=v1[i];
+        auto& p2=v2[i];
+        acc+= sqrt(S2(p1.x-p2.x)+S2(p1.y-p2.y));
+    }
+    return acc/v1.size();
+}
+
+
 int main(int argc, char **argv) {
-
-
-
 
     try {
 
@@ -191,9 +228,26 @@ int main(int argc, char **argv) {
         cvtColor(image, image, CV_BGR2BGRA);
         // read camera parameters if passed
         TheCameraParameters.readFromXMLFile("../camera.yml");
-        float TheMarkerSize = 0.0565;
+        float TheMarkerSize = 0.0290;//0.0565;
         float len_mark = sqrt(TheMarkerSize*TheMarkerSize+TheMarkerSize*TheMarkerSize);
         float len_a4 = sqrt(a4_height*a4_height+a4_width*a4_width);
+
+        auto&& pattern_image_s = get_translation_pattern_s(0, -0.16667, image);
+        const vector<Point2f> pattern_marker_s = {
+                Point2f(-1,1),
+                Point2f(1, 1),
+                Point2f(1, -1),
+                Point2f(-1, -1)
+        };
+        vector<Point2f> pattern_paper_s = vector<Point2f>(pattern_marker_s.begin(), pattern_marker_s.end());
+
+        for (auto & i : pattern_paper_s){
+            i.x*=a4_width/TheMarkerSize;
+            i.y*=a4_height/TheMarkerSize;
+        }
+
+        Marker last_marker;
+
 
         TheVideoCapturer.open(0);
 
@@ -213,7 +267,7 @@ int main(int argc, char **argv) {
         //  MDetector.setCornerRefinementMethod(aruco::MarkerDetector::SUBPIX);
 
         //gui requirements : the trackbars to change this parameters
-        cv::namedWindow("in", WINDOW_OPENGL);
+        cv::namedWindow("in");
 
         //go!
         char key = 0;
@@ -230,55 +284,42 @@ int main(int argc, char **argv) {
             TheInputImage.copyTo(TheInputImageCopy);
 
 
-
-            if(TheMarkers.size()>0){
-                for(auto i = 0 ; i<TheMarkers.size();i++) {
-                    auto cent = TheMarkers[i].getCenter();
-                    circle(TheInputImageCopy, cent, 10, Scalar(255), 10);
-                    for (auto i : TheMarkers[i]) {
-                        circle(TheInputImageCopy, i, 10, Scalar(255), 10);
-                    }
-                }
-            }
-
             if (TheMarkers.size() > 0 && TheCameraParameters.isValid() && TheMarkerSize > 0)
                 for (unsigned int i = 0; i < TheMarkers.size(); i++) {
+
+
                     Marker &lamaker = TheMarkers[i];
+                    //last_marker=lamarker;
+
+                    if (last_marker.size() == 0)
+                        last_marker = lamaker;
+
+//                    if(euclid_dist(last_marker, lamaker)<200)
+//                        lamaker=last_marker;
+
+
                     Point mcenter = lamaker.getCenter();
+
                     if (lamaker.size() == 4) {
+                        vector<Point> corners(lamaker.begin(), lamaker.end());
+                        vector<vector<Point>> c_corners = {corners};
+                        fillPoly(TheInputImageCopy, c_corners, Scalar(180,180,180));
+                        // marker calib -> real  marker
+                        Mat M0=getPerspectiveTransform(pattern_marker_s, lamaker);
 
-                        vector<Point2f> pattern = {
-                                Point2f(-5,5),
-                                Point2f(5, 5),
-                                Point2f(5, -5),
-                                Point2f(-5, -5)
-                        };
+                        //the virtual a4 paper.
+                        vector<Point2f> pattern_paper_v;
+                        perspectiveTransform(pattern_paper_s, pattern_paper_v, M0);
 
-                        Mat M0=getPerspectiveTransform(pattern, lamaker);
+                        circle(TheInputImageCopy, mcenter, 10, Scalar(0,255,0),10);
+                        for(auto ii : lamaker)
+                            circle(TheInputImageCopy, ii, 10, Scalar(0,255,0), 10);
 
-
-                        for (auto & i : pattern){
-                            i.x*=a4_width/TheMarkerSize;
-                            i.y*=a4_height/TheMarkerSize;
-                        }
-                        //pattern ok.
-                        vector<Point2f> pv;
-                        perspectiveTransform(pattern, pv, M0);//get a4-corners.
-
-
-                        for(auto i : lamaker)
-                            circle(TheInputImageCopy, i, 10, Scalar(0,255,0), 10);
-                        for(auto i : pv)
-                            circle(TheInputImageCopy, i, 10, Scalar(0,0,255), 10);
-
-                        vector<Point2f> ps = {
-                                Point(image.cols, image.rows),
-                                Point(0, image.rows),
-                                Point(0, 0),
-                                Point(image.cols, 0),
-
-                        };
-                        Mat M = getPerspectiveTransform(ps, pv);
+                        /* 一旦我们有了虚拟a4纸的四个点，用平移之后的原图的四个点计算变换阵M，
+                         * 则如果我们拿原图的四个点，用变换阵M做变换，
+                         * 就得到了平移后的a4纸上对应的四个点。*/
+                        /* you are not expected to understand this. */
+                        Mat M = getPerspectiveTransform(pattern_image_s, pattern_paper_v);
                         Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
                         warpPerspective(image, transf, M, TheInputImageCopy.size(), INTER_NEAREST);
                         white_transparent(transf, transf);
@@ -287,7 +328,7 @@ int main(int argc, char **argv) {
                     }
                 }
 
-            cv::imshow("in", resize(TheInputImageCopy,1280));
+            cv::imshow("in", resize(TheInputImageCopy,640));
 
             key = (char)cv::waitKey(1); // wait for key to be pressed
             if(key=='s')  waitTime= waitTime==0?1:0;
