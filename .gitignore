@@ -40,3 +40,9 @@ artest/cmake-build-debug/CMakeFiles/artest.dir/flags.make
 artest/cmake-build-debug/CMakeFiles/artest.dir/link.txt
 artest/cmake-build-debug/CMakeFiles/artest.dir/main.cpp.o
 artest/cmake-build-debug/CMakeFiles/artest.dir/progress.make
+
+handmask/Debug/
+handmask/x64/
+handmask/.vs/
+handmask/handmask/x64/
+handmask/handmask/test.mp4
