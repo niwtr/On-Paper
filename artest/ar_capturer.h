@@ -60,6 +60,7 @@ namespace on_paper {
         VideoCapture TheVideoCapturer;
         vector<Marker> TheMarkers;
         vector< Marker > TheLastMarkers;
+        vector<Marker> Preserved_TheMarkers;
         Mat TheInputImage, TheInputImageCopy;
         CameraParameters TheCameraParameters;
 
@@ -122,6 +123,7 @@ namespace on_paper {
 
         cv::Mat resize(const cv::Mat &in,int width);
         void anti_shake(void);
+        void fill_markers(void);
     };
 
 }

@@ -36,11 +36,11 @@ void on_paper::ar_capturer::main_loop() {
             // copy image
             // Detection of markers in the image passed
             TheMarkers= MDetector.detect(TheInputImage, TheCameraParameters, TheMarkerSize);
+
+            TheInputImage.copyTo(TheInputImageCopy);
+            fill_markers();
             if(perform_anti_shake)
                 anti_shake();
-            // print marker info and draw the markers in image
-            TheInputImage.copyTo(TheInputImageCopy);
-
             map_markers();
             TheLastMarkers=TheMarkers;
             cv::imshow("ar", resize(TheInputImageCopy,1280));
@@ -214,7 +214,6 @@ void on_paper::ar_capturer::map_markers(void) {
 
     } else return ;//do nothing and back!
 
-    Marker transformer;//我们选中的用于四点变换的marker。
     vector<Point2f> virtual_paper ;
     for (unsigned int i = 0; i < TheMarkers.size(); i++) {
 
@@ -224,25 +223,18 @@ void on_paper::ar_capturer::map_markers(void) {
             continue;
 
         Point mcenter = lamaker.getCenter();
-
         if (lamaker.size() != 4) {
             std::cout << "Panic! " << std::endl;
             exit(-9);
         }
-        vector<Point> corners(lamaker.begin(), lamaker.end());
-        vector<vector<Point>> c_corners = {corners};
-        fillPoly(TheInputImageCopy, c_corners, Scalar(180,180,180));
-
         Mat M0=getPerspectiveTransform(pattern_marker_source, lamaker);
 
         vector<Point2f> __virtual_paper;
         perspectiveTransform(shifted_pattern_paper_source[lamaker.id%4], __virtual_paper, M0);
 
-        //选定一个transformer
-        transformer = lamaker;
-        circle(TheInputImageCopy, mcenter, 10, Scalar(0,255,0),10);
-        for(auto i=0;i< lamaker.size();i++)
-            circle(TheInputImageCopy, lamaker[i], 10, Scalar(0, i*50, 0), 10);
+        //circle(TheInputImageCopy, mcenter, 10, Scalar(0,255,0),10);
+        //for(auto ii=0;ii< lamaker.size();i++)
+        //            circle(TheInputImageCopy, lamaker[i], 10, Scalar(0, i*50, 0), 10);
 
         if(virtual_paper.size()==0)
             virtual_paper=__virtual_paper;
@@ -258,8 +250,6 @@ void on_paper::ar_capturer::map_markers(void) {
     white_transparent(transf, transf);
     //Mat output;
     overlayImage(TheInputImageCopy, transf, TheInputImageCopy, Point(0, 0));
-
-
 }
 
 vector<cv::Point2f> on_paper::ar_capturer::vector_avg2(const vector<cv::Point2f> &src1, const vector<cv::Point2f> &src2)
@@ -276,18 +266,26 @@ vector<cv::Point2f> on_paper::ar_capturer::vector_avg2(const vector<cv::Point2f>
 
 void on_paper::ar_capturer::anti_shake(void) {
 #define distance(a,b) (sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)))
-
     for (unsigned int i = 0; i < TheMarkers.size()&&i<TheLastMarkers.size(); i++) {
         Point center=TheMarkers[i].getCenter();
         Point pre_center=TheLastMarkers[i].getCenter();
-        //cout<<center.x<<" "<<center.y<<endl;
-        //cout<<pre_center.x<<" "<<pre_center.y<<endl;
-        cout<<"distance"<<distance(center,pre_center)<<endl;
         if(distance(center,pre_center)<10)
             TheMarkers[i]=TheLastMarkers[i];
     }
+}
 
+void on_paper::ar_capturer::fill_markers(void) {
+    for(auto& lamaker : TheMarkers) {//fill the marker with white.
+        constexpr const int covering_shift = 10;
+        vector<Point> corners(lamaker.begin(), lamaker.end());
+        corners[0].x-=covering_shift;corners[0].y-=covering_shift;
+        corners[1].x+=covering_shift;corners[1].y-=covering_shift;
+        corners[2].x+=covering_shift;corners[2].y+=covering_shift;
+        corners[3].x-=covering_shift;corners[3].y+=covering_shift;
 
+        vector<vector<Point>> c_corners = {corners};
+        fillPoly(TheInputImageCopy, c_corners, Scalar(180, 180, 180));
+    }
 }
 
 #undef distance
