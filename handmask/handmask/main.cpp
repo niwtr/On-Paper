@@ -13,30 +13,64 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	int train = 0;				// train or test
-	int tar_width = 500;		// resizing the input image
+	int tar_width = 320;		// resizing the input image
 
 	char buffer[_MAX_PATH];
 	getcwd(buffer, _MAX_PATH);
 	string root = buffer;
 
+	HandDetector hd(tar_width);
+
 	if (train)
 	{
 		cout << "Training Model...\n";
+
+		ifstream fs(root + "\\img_name.txt");
+		if (!fs.is_open())
+		{
+			cerr << "Error: cannot open file\n";
+			return -1;
+		}
+
+		Mat img, mask;
+		while (!fs.eof())
+		{
+			string name;
+			fs >> name;
+
+			img = imread(root + "\\img\\" + name);
+			if (!img.data)
+				break;
+
+			mask = imread(root + "\\mask\\" + name);
+			if (!img.data)
+				break;
+
+			//hd.train(img, mask);
+
+			cout << name << endl;
+
+			hd.process(img, mask);
+			imshow("mask", mask);
+			waitKey(0);
+		}
 	}
 	else
 	{
 		cout << "Testing Model...\n";
-		string video_name = root + "\\test.mp4";
+		string video_name = root + "\\test2.mp4";
 
 		VideoCapture cap;
-		cap.open(0);
+		cap.open(video_name);
 		if (!cap.isOpened()) {
 			cerr << "Error: cannot open camera\n";
 			return -1;
 		}
 
-		HandDetector hd(tar_width);
 		Mat img, mask;
+		int cnt = 0;
+		time_t start, stop;
+		start = time(NULL);
 		while (1)
 		{
 			cap >> img;
@@ -44,8 +78,19 @@ int main(int argc, char* argv[])
 				break;
 
 			hd.process(img, mask);
+
 			imshow("mask", mask);
 			waitKey(1);
+
+			// calculate and display fps every 2s
+			cnt++;
+			stop = time(NULL);
+			if (stop - start > 2)
+			{
+				cout << "fps: " << cnt / (stop - start) << endl;
+				start = time(NULL);
+				cnt = 0;
+			}
 		}
 	}
 }
