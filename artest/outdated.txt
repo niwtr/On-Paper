@@ -1,0 +1,47 @@
+
+void scaleROI(vector<Point2f> & v,
+              const Point2f& center, float scalex, float scaley){
+    Point2f &tl=v[0],&tr=v[1],&br=v[2],&bl=v[3];
+
+    //TopLeft
+    float shiftX = abs(center.x -tl.x);
+    float shiftY = abs(center.y -tl.y);
+
+    shiftX = shiftX * scalex;
+    shiftY = shiftY * scaley;
+
+    tl.x = center.x - shiftX;
+    tl.y = center.y - shiftY;
+
+
+    //topright
+
+    shiftX = abs(tr.x - center.x);
+    shiftY = abs(tr.y - center.y);
+
+    shiftX = shiftX * scalex;
+    shiftY = shiftY * scaley;
+
+    tr.x = center.x + shiftX;
+    tr.y = center.y - shiftY;
+
+    //> BottomRight
+
+    shiftX = abs(br.x - center.x);
+    shiftY = abs(br.y - center.y);
+
+    shiftX = shiftX * scalex;
+    shiftY = shiftY * scaley;
+
+    br.x = center.x + shiftX;
+    br.y = center.y + shiftY;
+    //BottomLeft
+    shiftX = abs(center.x - bl.x);
+    shiftY = abs(bl.y - center.y);
+
+    shiftX = shiftX * scalex;
+    shiftY = shiftY * scaley;
+
+    bl.x = center.x - shiftX;
+    bl.y = center.y + shiftY;
+}
