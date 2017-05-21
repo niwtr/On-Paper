@@ -18,6 +18,7 @@ enum ColorSpaceType {
 
 #define THRESHOLD_AREA 20
 #define MAX_CONTOURS_SIZE 5
+#define PI 3.14
 
 class HandDetector
 {
@@ -33,6 +34,11 @@ public:
 	void handle_contour(Mat& dst, const vector<Point> &contour);
 	void draw_contour(Mat& dst, const vector<Point> &contour, const Scalar& color, int thickness = 1);
 	int biggest_contour(vector<vector<Point> > &contours);
+
+	void detect_palm(const Mat& src_hand, const vector<Point>& contour, Mat& dst_palm);
+
+	void drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color);
+	void ori_correct(Mat& dst, const vector<Point> &contour);
 
 	void threashold_C(const Mat& src, Mat& dst, int color_code);
 	void threashold_YCrCb(const Mat& src, Mat& dst);

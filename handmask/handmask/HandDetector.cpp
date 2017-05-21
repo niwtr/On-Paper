@@ -59,11 +59,7 @@ void HandDetector::process(const Mat& src, Mat& dst)
 
 	medianBlur(img_and, img_and, 7);
 	
-	//dst = img_and;
-	Mat img_edge;
-	Canny(img_and, img_edge, 50, 250);
-
-	hand_contours(img_edge, src_std);
+	hand_contours(img_and, src_std);
 	dst = src_std;
 	
 	//_bgsubtractor->apply(thd, dst, 0.01);
@@ -85,10 +81,7 @@ void HandDetector::process2(const Mat& src, Mat& dst)
 	int ksize = 7;
 	medianBlur(thd, thd, ksize);
 
-	Mat img_edge;
-	Canny(thd, img_edge, 50, 250);
-
-	hand_contours(img_edge, dst);
+	hand_contours(thd, dst);
 }
 
 void HandDetector::threashold_YCrCb(const Mat& src, Mat& dst)
@@ -142,7 +135,7 @@ void HandDetector::threashold_Y(const Mat& src, Mat& dst)
 		for (int j = 0; j < src.cols; j++)
 		{
 			Vec3b ele = src.at<Vec3b>(i, j);
-			if (ele[0] > MIN_Y && ele[2] > MIN_Cb && ele[2] < MAX_Cb)
+			if (ele[0] > MIN_Y)
 			{
 				dst.at<uchar>(i, j) = 255;
 			}
@@ -155,15 +148,15 @@ void HandDetector::threashold_Y(const Mat& src, Mat& dst)
 }
 
 
-// find the max-length of contour
+// find the max-area of contour
 int HandDetector::biggest_contour(vector<vector<Point> > &contours)
 {
 	int idx = 0;
-	int sz_contours = 0;
+	int area = 0;
 	for (int i = 0; i < contours.size(); i++) {
-
-		if (contours[i].size() > sz_contours) {
-			sz_contours = contours[i].size();
+		double tmp_area = contourArea(contours[i]);
+		if (tmp_area > area) {
+			area = tmp_area;
 			idx = i;
 		}
 	}
@@ -178,6 +171,76 @@ void HandDetector::draw_contour(Mat& dst, const vector<Point> &contour, const Sc
 	drawContours(dst, tmp_points, 0, color, 1);
 }
 
+void HandDetector::drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color)
+{
+	if (theta < PI / 4. || theta > 3.*PI / 4.)// ~vertical line
+	{
+		cv::Point pt1(rho / cos(theta), 0);
+		cv::Point pt2((rho - image.rows * sin(theta)) / cos(theta), image.rows);
+		cv::line(image, pt1, pt2, cv::Scalar(255), 1);
+	}
+	else
+	{
+		cv::Point pt1(0, rho / sin(theta));
+		cv::Point pt2(image.cols, (rho - image.cols * cos(theta)) / sin(theta));
+		cv::line(image, pt1, pt2, color, 1);
+	}
+}
+
+// 矫正手部方向
+void HandDetector::ori_correct(Mat& dst, const vector<Point> &contour)
+{
+	Vec4f li;
+	fitLine(contour, li, CV_DIST_HUBER, 0, 0.01, 0.01);
+	double cos_theta = li[0];
+	double sin_theta = li[1];
+	double x0 = li[2], y0 = li[3];
+
+	double phi = atan2(sin_theta, cos_theta) + PI / 2.0;
+	double rho = y0 * cos_theta - x0 * sin_theta;
+
+	drawLine(dst, phi, rho, cv::Scalar(0));
+}
+
+// 检测手掌
+void HandDetector::detect_palm(const Mat& src_hand, const vector<Point>& contour, Mat& dst_palm)
+{
+	// 距离变换
+	Mat dist;
+	distanceTransform(src_hand, dist, DIST_L2, 3);
+
+	// 检测最小矩形，缩小检测范围
+	Rect rec = boundingRect(contour);
+
+	int temp = 0, R = 0, cx = 0, cy = 0, flag;
+	for (int i = rec.y; i < rec.y + rec.height; i++)
+	{
+		for (int j = rec.x; j < rec.x + rec.width; j++)
+		{
+			// 检测是否在轮廓内，影响实时性
+			//flag = pointPolygonTest(contour, Point2f(j, i), 0);	
+			//if (flag > 0)
+			{
+				temp = (int)dist.at<float>(i, j);
+				if (temp > R)
+				{
+					R = temp;
+					cy = i;
+					cx = j;
+				}
+			}
+		}
+	}
+
+	src_hand.copyTo(dst_palm);
+	cvtColor(dst_palm, dst_palm, CV_GRAY2BGR);
+	circle(dst_palm, Point(cx, cy), R, Scalar(255, 0, 0));
+	//return make_pair(Point(cx, cy), R);
+
+	//normalize(dist, dst_palm, 0, 1, CV_MINMAX);
+}
+
+// 处理一个轮廓
 void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour)
 {
 	vector<Point> hull;
@@ -191,63 +254,73 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour)
 	approxPolyDP(Mat(contour), approxCurve, 15, true);
 
 	// 计算闭包和凸缺陷
-	convexHull(Mat(contour), hull, false);
-	convexHull(Mat(contour), hullsI, false);
+	convexHull(Mat(approxCurve), hull, false);
+	convexHull(Mat(approxCurve), hullsI, false);
 
 	// 画出轮廓和凸包
 	//draw_contour(dst, contour, color, 2);
 	draw_contour(dst, approxCurve, color, 1);
 	draw_contour(dst, hull, color, 1);
 
+	// 纠正方向
+	ori_correct(dst, contour);
+
 	// 画出凸包点
-	for (int j = 0; j < hullsI.size(); j++)
-	{
-		int k = hullsI[j];
-		circle(dst, contour[k], 3, Scalar(0, 255, 0), 2);
-	}
+	//for (int j = 0; j < hullsI.size(); j++)
+	//{
+	//	int k = hullsI[j];
+	//	circle(dst, contour[k], 3, Scalar(0, 255, 0), 2);
+	//}
 
 	// 计算凸缺陷
-	//convexityDefects(Mat(contour), hullsI, defects);
-	//vector<Vec4i>::iterator d = defects.begin();
-	//while (d != defects.end()) {
-	//	Vec4i& v = (*d);
-	//	int startidx = v[0];
-	//	Point ptStart(contour[startidx]); // point of the contour where the defect begins
-	//	int endidx = v[1];
-	//	Point ptEnd(contour[endidx]); // point of the contour where the defect ends
-	//	int faridx = v[2];
-	//	Point ptFar(contour[faridx]);// the farthest from the convex hull point within the defect
-	//	int depth = v[3];					// distance between the farthest point and the convex hull
+	convexityDefects(Mat(approxCurve), hullsI, defects);
+	vector<Vec4i>::iterator d = defects.begin();
+	while (d != defects.end()) {
+		Vec4i& v = (*d);
+		int startidx = v[0];
+		Point ptStart(approxCurve[startidx]); // point of the contour where the defect begins
+		int endidx = v[1];
+		Point ptEnd(approxCurve[endidx]); // point of the contour where the defect ends
+		int faridx = v[2];
+		Point ptFar(approxCurve[faridx]);// the farthest from the convex hull point within the defect
+		int depth = v[3];					// distance between the farthest point and the convex hull
 
-	//	//if (depth > 20 && depth < 150)
-	//	{
-	//		//line(dst, ptStart, ptFar, CV_RGB(0, 255, 0), 2);
-	//		//line(dst, ptEnd, ptFar, CV_RGB(0, 255, 0), 2);
-	//		circle(dst, ptStart, 4, Scalar(255, 0, 100), 2);
-	//		circle(dst, ptEnd, 4, Scalar(255, 0, 100), 2);
-	//		circle(dst, ptFar, 4, Scalar(100, 0, 255), 2);
-	//	}
-	//	d++;
-	//}
+		//if (depth > 20 && depth < 150)
+		{
+			//line(dst, ptStart, ptFar, CV_RGB(0, 255, 0), 2);
+			//line(dst, ptEnd, ptFar, CV_RGB(0, 255, 0), 2);
+			circle(dst, ptStart, 4, Scalar(255, 0, 100), 2);
+			circle(dst, ptEnd, 4, Scalar(255, 0, 100), 2);
+			circle(dst, ptFar, 4, Scalar(100, 0, 255), 2);
+		}
+		d++;
+	}
 }
 
-
+// 检测手部轮廓
 void HandDetector::hand_contours(const Mat& src, Mat& dst)
 {
 	vector<vector<Point> > contours;
 	findContours(src, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
-	// only max-length contour valid
+	if (contours.size() == 0)
+		return;
+
+	// only max-area contour valid
 	int idx = biggest_contour(contours);
 	handle_contour(dst, contours[idx]);
+
+	// 检测手掌
+	//Mat palm;
+	//detect_palm(src, contours[idx], palm);
+	//dst = palm;
 	
 	//int va_contours = 0;
 	//for (int i = 0; i < contours.size(); i++) {
 	//	double area = contourArea(contours[i]);
 	//	double length = arcLength(contours[i], false);
 
-	//	if(length > _tar_width / 2)
-	//	//if (area > THRESHOLD_AREA)
+	//	if (area > THRESHOLD_AREA)
 	//	{
 	//		va_contours++;
 	//		handle_contour(dst, contours[i]);
