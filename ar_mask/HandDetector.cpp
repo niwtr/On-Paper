@@ -3,8 +3,6 @@
 HandDetector::HandDetector(int tar_width) :
 	_tar_width(tar_width)
 {
-	_bgsubtractor = createBackgroundSubtractorMOG2();
-	//_bgsubtractor->setVarThreshold(20);
 }
 
 void HandDetector::train(const Mat& img, const Mat& mask)
@@ -38,51 +36,56 @@ void HandDetector::train(const Mat& img, const Mat& mask)
 // used otsu + YCrCb filter
 void HandDetector::process(const Mat& src, Mat& dst)
 {
+	_ctl_point = Point(0, 0);	// 清零
+	_prop = _tar_width * 1.0 / src.size().width;
+
 	Mat src_std;
-	resize(src, src_std, Size(_tar_width, _tar_width * 1.0 / src.size().width * src.size().height));
+	resize(src, src_std, Size(_tar_width, _prop * src.size().height));
 
 	dst = Mat::zeros(src_std.size(), CV_8UC3);
 
+	Mat mask;
+	hand_mask(src_std, mask);
+	medianBlur(mask, mask, BLUR_KSIZE);
+	
+	hand_contours(mask, src_std);
+	dst = src_std;
+}
+
+Point HandDetector::get_fingertip()
+{
+	Point rtn;
+	rtn.x =  _ctl_point.x / _prop;
+	rtn.y = _ctl_point.y / _prop;
+	return rtn;
+}
+
+// detect hand mask: method 1
+void HandDetector::hand_mask(const Mat& src_std, Mat& dst)
+{
 	cvtColor(src_std, src_std, CV_BGR2YCrCb);
 
 	vector<Mat> src_colors;
 	split(src_std, src_colors);
 
 	Mat thd;
-	threshold(src_colors[1], thd, 0, 255, CV_THRESH_OTSU|CV_THRESH_BINARY);
+	threshold(src_colors[1], thd, 0, 255, CV_THRESH_OTSU | CV_THRESH_BINARY);
 
 	Mat tmp;
 	threashold_Y(src_std, tmp);
 
 	Mat img_and;
-	bitwise_and(tmp, thd, img_and);
-
-	medianBlur(img_and, img_and, 7);
-	
-	hand_contours(img_and, src_std);
-	dst = src_std;
-	
-	//_bgsubtractor->apply(thd, dst, 0.01);
+	bitwise_and(tmp, thd, dst);
 }
 
-// simple color filter
-void HandDetector::process2(const Mat& src, Mat& dst)
+// detect hand mask: method 2
+void HandDetector::hand_mask2(const Mat& src_std, Mat& dst)
 {
-	Mat src_std;
-	resize(src, src_std, Size(_tar_width, _tar_width * 1.0 / src.size().width * src.size().height));
-
-	dst = Mat::zeros(src_std.size(), CV_8UC1);
-
 	cvtColor(src_std, src_std, CV_BGR2YCrCb);
 
-	Mat thd;
-	threashold_YCrCb(src_std, thd);
-
-	int ksize = 7;
-	medianBlur(thd, thd, ksize);
-
-	hand_contours(thd, dst);
+	threashold_YCrCb(src_std, dst);
 }
+
 
 void HandDetector::threashold_YCrCb(const Mat& src, Mat& dst)
 {
@@ -261,7 +264,6 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const 
 	vector<int> hullsI;
 	vector<Vec4i> defects;
 	vector<Point> approxCurve;
-	vector<Vec3p> fingers;
 
 	Scalar color = Scalar(255, 255, 255);
 
@@ -277,21 +279,30 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const 
 	draw_contour(dst, approxCurve, color, 1);
 	draw_contour(dst, hull, color, 1);
 
+	// 未检测到手指（手掌闭合状态）
+	if (matchShapes(approxCurve, hull, CV_CONTOURS_MATCH_I1, 0) == 0)
+		return;
+
 	// 纠正方向
 	//ori_correct(dst, contour);
 
-	// 画出凸包点
-	//for (int j = 0; j < hullsI.size(); j++)
-	//{
-	//	int k = hullsI[j];
-	//	circle(dst, contour[k], 3, Scalar(0, 255, 0), 2);
-	//}
-
-	// 计算凸缺陷
-	convexityDefects(Mat(approxCurve), hullsI, defects);
-
+	// 找距离掌心最远凸包点
 	float tmp_max = 0, tmp = 0;
 	Point far_max(0, 0);
+	for (int j = 0; j < hullsI.size(); j++)
+	{
+		int k = hullsI[j];
+
+		tmp = distance_P2P(center, approxCurve[k]);
+		if (tmp_max < tmp && approxCurve[k].x != dst.cols-1 && approxCurve[k].y != dst.rows-1) // 指尖不会出现在边缘
+		{
+			tmp_max = tmp;
+			far_max = approxCurve[k];
+		}
+	}
+	
+	// 计算凸缺陷
+	convexityDefects(Mat(approxCurve), hullsI, defects);
 	vector<Vec4i>::iterator d = defects.begin();
 	while (d != defects.end()) {
 		Vec4i& v = (*d);
@@ -301,37 +312,19 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const 
 		int depth = v[3];					// distance between the farthest point and the convex hull
 
 		if (get_angle(pt_s, pt_f, pt_e) < THRESHOLD_ANGLE)
-			fingers.push_back(Vec3p(pt_s, pt_f, pt_e));
-
-		// 找距离掌心最远点
-		tmp = distance_P2P(center, pt_s);
-		if (tmp_max < tmp)
 		{
-			tmp_max = tmp;
-			far_max = pt_s;
+			circle(dst, pt_s, 4, Scalar(255, 0, 100), 2);
+			circle(dst, pt_e, 4, Scalar(255, 0, 100), 2);
+			circle(dst, pt_f, 4, Scalar(100, 0, 255), 2);
 		}
-		tmp = distance_P2P(center, pt_e);
-		if (tmp_max < tmp)
-		{
-			tmp_max = tmp;
-			far_max = pt_e;
-		}
-
 		d++;
 	}
 
-	// 标记出手指的点
-	if (fingers.size() != 0)
+	if (far_max != Point(0, 0))
 	{
-		for (Vec3p ele : fingers)
-		{
-			circle(dst, ele[0], 4, Scalar(255, 0, 100), 2);
-			circle(dst, ele[2], 4, Scalar(255, 0, 100), 2);
-			circle(dst, ele[1], 4, Scalar(100, 0, 255), 2);
-		}
-	}
-	if(far_max != Point(0, 0))
+		_ctl_point = far_max;
 		circle(dst, far_max, 4, Scalar(0, 255, 0), 2);
+	}
 }
 
 // 检测手部轮廓
@@ -340,7 +333,8 @@ void HandDetector::hand_contours(const Mat& src, Mat& dst)
 	vector<vector<Point> > contours;
 	findContours(src, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
-	if (contours.size() == 0)
+	// 未检测到手
+	if (contours.size() == 0 || contours.size() > MAX_CONTOURS_SIZE)
 		return;
 
 	// 检测最大轮廓
@@ -351,10 +345,10 @@ void HandDetector::hand_contours(const Mat& src, Mat& dst)
 	int r;
 	detect_palm(src, contours[idx], center, r);
 	circle(dst, center, r, Scalar(255, 0, 0));
-	
-	// 处理轮廓
+
+	// 处理轮廓	
 	handle_contour(dst, contours[idx], center, r);
-	
+
 	// 画出所有轮廓
 	//int va_contours = 0;
 	//for (int i = 0; i < contours.size(); i++) {

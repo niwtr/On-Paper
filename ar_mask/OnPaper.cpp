@@ -39,8 +39,9 @@ void on_paper::OnPaper::main_loop(void) {
             ac.get_input_image(TheInputImage);
             ac.process();
             hd.process(TheInputImage,mask);
+            Point finger_tip = hd.get_fingertip();
             ac.release_output_image(TheProcessedImage);
-
+            circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 2);
             cv::imshow("ar", TheProcessedImage);
             cv::imshow("mask", mask);
             key = (char)cv::waitKey(1); // wait for key to be pressed
