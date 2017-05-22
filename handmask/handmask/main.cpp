@@ -13,7 +13,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	int train = 0;				// train or test
-	int tar_width = 200;		// resizing the input image
+	int tar_width = 320;		// resizing the input image
 
 	char buffer[_MAX_PATH];
 	getcwd(buffer, _MAX_PATH);
@@ -61,13 +61,13 @@ int main(int argc, char* argv[])
 		string video_name = root + "\\test1.mp4";
 
 		VideoCapture cap;
-		cap.open(video_name);
+		cap.open(1);
 		if (!cap.isOpened()) {
 			cerr << "Error: cannot open camera\n";
 			return -1;
 		}
 
-		Mat img, mask;
+		Mat img, hand;
 		int cnt = 0;
 		time_t start, stop;
 		start = time(NULL);
@@ -77,9 +77,13 @@ int main(int argc, char* argv[])
 			if (!img.data)
 				break;
 
-			hd.process(img, mask);
+			hd.process(img, hand);
+			imshow("mask", hand);
 
-			imshow("mask", mask);
+			Point finger_tip = hd.get_fingertip();
+			circle(img, finger_tip, 4, Scalar(0, 0, 255), 2);
+			imshow("Finger_Tip", img);
+
 			waitKey(1);
 
 			// calculate and display fps every 2s
