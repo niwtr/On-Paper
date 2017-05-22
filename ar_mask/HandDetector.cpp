@@ -280,8 +280,8 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const 
 	draw_contour(dst, hull, color, 1);
 
 	// 未检测到手指（手掌闭合状态）
-	if (matchShapes(approxCurve, hull, CV_CONTOURS_MATCH_I1, 0) == 0)
-		return;
+	//if (matchShapes(approxCurve, hull, CV_CONTOURS_MATCH_I1, 0) == 0)
+//		return;
 
 	// 纠正方向
 	//ori_correct(dst, contour);

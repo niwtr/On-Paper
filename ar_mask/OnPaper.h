@@ -7,6 +7,8 @@
 
 #include "ARCapturer.h"
 #include "HandDetector.h"
+#include "Painter.h"
+
 namespace on_paper {
     class OnPaper {
     public:
@@ -19,7 +21,7 @@ namespace on_paper {
         ARCapturer ac;
         //TODO 把HandDetector加入OnPaper命名空间。
         HandDetector hd;
-
+        Painter pa;
 
     public:
         //TODO 为构造函数添加合适的参数
@@ -27,6 +29,7 @@ namespace on_paper {
         void init(void){
             TheCameraParameters.readFromXMLFile("../camera.yml");
             ac.init(TheCameraParameters);
+
         }
         void main_loop(void);
 

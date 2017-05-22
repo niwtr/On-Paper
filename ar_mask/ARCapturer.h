@@ -107,6 +107,9 @@ namespace on_paper {
         void process();
         void init(CameraParameters cp);
         void toggle_anti_shake(){this->perform_anti_shake = not this->perform_anti_shake;}
+        //TODO move this to some other class, like util
+        void overlayImage(const cv::Mat &background, const cv::Mat &foreground,
+                          cv::Mat &output, cv::Point2i location);
 
     private:
 
@@ -114,8 +117,6 @@ namespace on_paper {
         float euclid_dist(const vecpf& v1, const vecpf& v2);
 
         void white_transparent(const Mat & src, Mat& dst);
-        void overlayImage(const cv::Mat &background, const cv::Mat &foreground,
-                          cv::Mat &output, cv::Point2i location);
 
         vector<Point2f>vector_avg2 (const vector<Point2f>& src1, const vector<Point2f>& src2);
         void map_markers (void);

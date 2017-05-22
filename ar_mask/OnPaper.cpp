@@ -20,6 +20,7 @@ void on_paper::OnPaper::main_loop(void) {
     if (TheCameraParameters.isValid())
         TheCameraParameters.resize(TheInputImage.size());
 
+    this->pa.init(TheInputImage.rows, TheInputImage.cols);
 
     try {
 
@@ -42,8 +43,13 @@ void on_paper::OnPaper::main_loop(void) {
             Point finger_tip = hd.get_fingertip();
             ac.release_output_image(TheProcessedImage);
             circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 2);
+            pa.draw_point(finger_tip, Scalar(0,255,255));
+            Mat& canvas_mask = pa.get_canvas();
+            cv::addWeighted(canvas_mask, 1, TheProcessedImage, 1 , 0, TheProcessedImage);
+
             cv::imshow("ar", TheProcessedImage);
             cv::imshow("mask", mask);
+            //cv::imshow("canvas", canvas_mask);
             key = (char)cv::waitKey(1); // wait for key to be pressed
             if(key=='s')  {
                 waitTime= waitTime==0?1:0;
