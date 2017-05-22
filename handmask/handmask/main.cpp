@@ -13,7 +13,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	int train = 0;				// train or test
-	int tar_width = 320;		// resizing the input image
+	int tar_width = 200;		// resizing the input image
 
 	char buffer[_MAX_PATH];
 	getcwd(buffer, _MAX_PATH);
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 	else
 	{
 		cout << "Testing Model...\n";
-		string video_name = root + "\\test2.mp4";
+		string video_name = root + "\\test1.mp4";
 
 		VideoCapture cap;
 		cap.open(video_name);
