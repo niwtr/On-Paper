@@ -29,6 +29,8 @@ namespace on_paper {
         void init(void){
             TheCameraParameters.readFromXMLFile("../camera.yml");
             ac.init(TheCameraParameters);
+            const Mat& img = ac.get_image();
+            pa.init(img.rows, img.cols);
 
         }
         void main_loop(void);

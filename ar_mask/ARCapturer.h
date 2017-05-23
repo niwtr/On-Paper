@@ -64,6 +64,9 @@ namespace on_paper {
         Mat TheInputImageCopy;
         CameraParameters CamParams;
 
+        Mat transmatrix_inv; //matrix for perspective transformation
+        Mat transmatrix;
+
         //the image (pdf paper) to display
         Mat image;
         /*
@@ -102,14 +105,18 @@ namespace on_paper {
         vector<Point2f> original_image_pattern;
 
     public:
+        const Mat& get_transmatrix_inv(){return transmatrix_inv;}
         void get_input_image(Mat& m){ m.copyTo(this->TheInputImageCopy); }
+        const Mat& get_image(){ return this->image;}
         void release_output_image(Mat& m){ this->TheInputImageCopy.copyTo(m);}
-        void process();
+        unsigned long process();
         void init(CameraParameters cp);
         void toggle_anti_shake(){this->perform_anti_shake = not this->perform_anti_shake;}
         //TODO move this to some other class, like util
         void overlayImage(const cv::Mat &background, const cv::Mat &foreground,
                           cv::Mat &output, cv::Point2i location);
+        void overlayCanvas(const Mat& canvas);
+
 
     private:
 
@@ -119,8 +126,7 @@ namespace on_paper {
         void white_transparent(const Mat & src, Mat& dst);
 
         vector<Point2f>vector_avg2 (const vector<Point2f>& src1, const vector<Point2f>& src2);
-        void map_markers (void);
-
+        void map_markers(void);//returns marker num.
         cv::Mat resize(const cv::Mat &in,int width);
         void anti_shake(void);
         void fill_markers(void);

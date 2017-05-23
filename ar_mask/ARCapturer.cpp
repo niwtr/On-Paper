@@ -7,7 +7,7 @@
 
 
 // must call get_input_image first!
-void on_paper::ARCapturer::process() {
+unsigned long on_paper::ARCapturer::process() {
     // copy image
     // Detection of markers in the image passed
     TheMarkers= MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
@@ -16,6 +16,7 @@ void on_paper::ARCapturer::process() {
         anti_shake();
     map_markers();
     TheLastMarkers=TheMarkers;
+    return TheMarkers.size();
 }
 
 void on_paper::ARCapturer::init(CameraParameters cp) {
@@ -165,12 +166,13 @@ void on_paper::ARCapturer::map_markers(void) {
             exists_in_middle = true;
         }
 
-    } else return ;//do nothing and back!
+    } else return;//do nothing and back!
 
     vector<Point2f> virtual_paper ;
-    for (unsigned int i = 0; i < TheMarkers.size(); i++) {
 
-        Marker &lamaker = TheMarkers[i];
+    for (unsigned long num = 0; num < TheMarkers.size(); num++) {
+
+        Marker &lamaker = TheMarkers[num];
         //如果存在中间点，则忽略两侧的点。
         if(exists_in_middle and (lamaker.id%4 == 0 or lamaker.id%4 == 3))
             continue;
@@ -198,6 +200,9 @@ void on_paper::ARCapturer::map_markers(void) {
 
     //把原图投射到虚拟纸张上。
     Mat M = getPerspectiveTransform(original_image_pattern, virtual_paper);
+    Mat M_inv = getPerspectiveTransform(virtual_paper, original_image_pattern);
+    this->transmatrix_inv = M_inv; //set val to M.
+    this->transmatrix = M;
     Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
     warpPerspective(image, transf, M, TheInputImageCopy.size(), cv::INTER_NEAREST);
     white_transparent(transf, transf);
@@ -240,6 +245,18 @@ void on_paper::ARCapturer::fill_markers(void) {
         vector<vector<Point>> c_corners = {corners};
         fillPoly(TheInputImageCopy, c_corners, Scalar(180, 180, 180));
     }
+}
+
+void on_paper::ARCapturer::overlayCanvas(const cv::Mat &canvas) {
+    if(transmatrix.empty())//当transmatrix为空的时候可不要overlay。这是初始情况
+        //TODO 尽量避免初始情况。使用更优雅的初始化函数。
+        return;
+    //TODO 尽量减少cvtColor?
+    cvtColor(TheInputImageCopy, TheInputImageCopy, CV_BGRA2BGR);
+    Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC3);
+    warpPerspective(canvas, transf, this->transmatrix, TheInputImageCopy.size(), cv::INTER_NEAREST);
+    cv::addWeighted(transf, 1, TheInputImageCopy, 1, 0, TheInputImageCopy);
+
 }
 
 #undef distance
