@@ -21,6 +21,7 @@ namespace on_paper {
         int canv_height;
         int canv_width;
 
+        Point last_point;
     public:
 
         Mat &get_canvas() { return this->canvas; }
@@ -31,10 +32,19 @@ namespace on_paper {
             this->canv_height = rows;
             this->canv_width = cols;
             this->canvas = Mat::zeros(rows, cols, CV_8UC3);
-            //cvtColor(canvas, canvas, CV_BGR2BGRA);
         }
         void draw_point(Point p, Scalar c){
-            circle(this->canvas, p, 3, c, 6);
+            if(p.x<10 or p.y<10)
+                return;
+            if(last_point.x<10 or last_point.y<10){
+                last_point = p;
+                return;
+            }
+            //circle(this->canvas, p, 3, c, 6);
+
+            line(canvas, last_point, p, c, 2, LINE_AA);
+            last_point = p;
+
         }
 
         void draw_points(vector<Point> &v, Scalar c);
