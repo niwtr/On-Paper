@@ -9,6 +9,21 @@
 #include "HandDetector.h"
 #include "Painter.h"
 
+
+
+#ifdef _WIN32
+
+#define and &&
+#define or ||
+#define not !
+
+#define ROOT "C:/Users/L.Laddie/Documents/On-Paper/ar_mask/"
+
+#else
+#define ROOT "../"
+
+#endif // _WIN32
+
 namespace on_paper {
     class OnPaper {
     public:
@@ -25,9 +40,9 @@ namespace on_paper {
 
     public:
         //TODO 为构造函数添加合适的参数
-        OnPaper(int hdwidth = 200):hd_width(hdwidth),hd(hd_width){}
+        OnPaper(int hdwidth = 320):hd_width(hdwidth),hd(hdwidth){}
         void init(void){
-            TheCameraParameters.readFromXMLFile("../camera.yml");
+            TheCameraParameters.readFromXMLFile(string(ROOT) + "camera.yml");
             ac.init(TheCameraParameters);
 
         }

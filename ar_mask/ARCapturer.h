@@ -12,13 +12,25 @@
 #include <vector>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <poppler/cpp/poppler-document.h>
-#include <poppler/cpp/poppler-page.h>
-#include <poppler/cpp/poppler-page-renderer.h>
-#include <poppler/cpp/poppler-image.h>
+//#include <poppler/cpp/poppler-document.h>
+//#include <poppler/cpp/poppler-page.h>
+//#include <poppler/cpp/poppler-page-renderer.h>
+//#include <poppler/cpp/poppler-image.h>
 #include <cmath>
 #include <opencv/cv.hpp>
 
+#ifdef _WIN32
+
+#define and &&
+#define or ||
+#define not !
+
+#define ROOT "C:/Users/L.Laddie/Documents/On-Paper/ar_mask/"
+
+#else
+#define ROOT "../"
+
+#endif // _WIN32
 
 
 namespace on_paper {

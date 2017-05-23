@@ -51,7 +51,7 @@ void on_paper::OnPaper::main_loop(void) {
             cv::addWeighted(canvas_mask, 1, TheProcessedImage, 1 , 0, TheProcessedImage);
 
             cv::imshow("ar", TheProcessedImage);
-            //cv::imshow("mask", mask);
+            cv::imshow("mask", mask);
             //cv::imshow("canvas", canvas_mask);
             key = (char)cv::waitKey(1); // wait for key to be pressed
             if(key=='s')  {

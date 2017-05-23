@@ -3,14 +3,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
-using namespace cv;
-using namespace std;
-
-enum ColorSpaceType {
-	C_YCrCb, C_YUV, C_HSV
-};
-
-typedef Vec<Point, 3> Vec3p;
 
 #define MIN_Cr 113
 #define MAX_Cr 173
@@ -21,46 +13,63 @@ typedef Vec<Point, 3> Vec3p;
 #define THRESHOLD_AREA 20
 #define MAX_CONTOURS_SIZE 5
 #define THRESHOLD_ANGLE 80
-#define BLUR_KSIZE 7
+#define BLUR_KSIZE 5
 #define PI 3.14
 
-class HandDetector
-{
-public:
-	HandDetector(int tar_width);
+namespace on_paper {
+	using namespace cv;
+	using namespace std;
 
-	void train(const Mat& img, const Mat& mask);
-	void process(const Mat& src, Mat& des);
-	Point get_fingertip();
+	enum ColorSpaceType {
+		C_YCrCb, C_YUV, C_HSV
+	};
 
-	// two methods of hand mask
-	void hand_mask(const Mat& src_std, Mat& dst);
-	void hand_mask2(const Mat& src_std, Mat& dst);
+	typedef Vec<Point, 3> Vec3p;
 
-	// detect and handle contours
-	void hand_contours(const Mat& src, Mat& dst);
-	void handle_contour(Mat& dst, const vector<Point> &contour, const Point center, const int r);
-	void draw_contour(Mat& dst, const vector<Point> &contour, const Scalar& color, int thickness = 1);
-	int biggest_contour(vector<vector<Point> > &contours);
 
-	// palm center and radius
-	void detect_palm(const Mat& src_hand, const vector<Point>& contour, Point& center, int& r);
+	class HandDetector
+	{
+	public:
+		HandDetector(int tar_width);
 
-	void ori_correct(Mat& dst, const vector<Point> &contour);
-	// tools
-	void drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color);
-	float distance_P2P(Point a, Point b);
-	float get_angle(Point s, Point f, Point e);
+		void train(const Mat& img, const Mat& mask);
+		void process(const Mat& src, Mat& des);
+		Point get_fingertip();
+		vector<Point> get_fingers();
 
-	// threshold for skin
-	void threashold_C(const Mat& src, Mat& dst, int color_code);
-	void threashold_YCrCb(const Mat& src, Mat& dst);
-	void threashold_YUV(const Mat& src, Mat& dst);
+	private:
+		// two methods of hand mask
+		void hand_mask(const Mat& src_std, Mat& dst);
+		void hand_mask2(const Mat& src_std, Mat& dst);
 
-	void threashold_Y(const Mat& src, Mat& dst);
+		// detect and handle contours
+		void hand_contours(const Mat& src, Mat& dst);
+		void handle_contour(Mat& dst, const vector<Point> &contour, const Point center, const int r);
+		void draw_contour(Mat& dst, const vector<Point> &contour, const Scalar& color, int thickness = 1);
+		int biggest_contour(vector<vector<Point> > &contours);
 
-private:
-	int _tar_width;
-	Point _ctl_point;
-	double _prop;
-};
+		// palm center and radius
+		void detect_palm(const Mat& src_hand, const vector<Point>& contour, Point& center, int& r);
+
+		void ori_correct(Mat& dst, const vector<Point> &contour);
+		// tools
+		void drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color);
+		float distance_P2P(Point a, Point b);
+		float get_angle(Point s, Point f, Point e);
+		Point cvt_prop(Point p);
+
+		// threshold for skin
+		void threashold_C(const Mat& src, Mat& dst, int color_code);
+		void threashold_YCrCb(const Mat& src, Mat& dst);
+		void threashold_YUV(const Mat& src, Mat& dst);
+
+		void threashold_Y(const Mat& src, Mat& dst);
+
+
+		int _tar_width;
+		Point _ctl_point;
+		double _prop;
+		vector<Point> _fingers;
+	};
+
+}

@@ -24,7 +24,7 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
     MDetector.setCornerRefinementMethod(aruco::MarkerDetector::SUBPIX);
     TheInputImageCopy = Mat::zeros(100,100,CV_8UC1); //FIXME potential bug.
     TheLastMarkers=MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
-    image = imread("../x-0.png");
+    image = imread(string(ROOT) + "x-0.png");
     //image= readPDFtoCV("../rt.pdf", 300);
     cvtColor(image, image, CV_BGR2BGRA);
     // read camera parameters if passed
