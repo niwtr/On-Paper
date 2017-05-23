@@ -11,6 +11,7 @@
 #include <vector>
 #include <iostream>
 #include <opencv/cv.hpp>
+#include <vector>
 
 #define EUCLID_DIST(A,B) (sqrt(fabs(pow(A.x - B.x, 2) + pow(A.y - B.y, 2))))
 
@@ -38,12 +39,14 @@ namespace on_paper {
         Mat measurement_KF;
         Mat process_noise_KF;
 
-
+        Mat transmatrix ; //matrix for transforming lines to original image.
     public:
 
         Mat &get_canvas() { return this->canvas; }
 
         Painter(){}
+
+        void with_transmatrix(const Mat &M){this->transmatrix=M;}
 
         void init(int rows, int cols) {
             this->canv_height = rows;
@@ -69,8 +72,6 @@ namespace on_paper {
             setIdentity(KF.measurementNoiseCov, Scalar::all(1e-1));
             setIdentity(KF.errorCovPost, Scalar::all(.1));
 
-
-
         }
         void draw_line_simple(Point p, Scalar c){
             if(p.x<10 or p.y<10)
@@ -80,16 +81,18 @@ namespace on_paper {
                 return;
             }
 
-
-
             line(canvas, last_point, p, c, 2, LINE_AA);
             last_point = p;
 
         }
 
+        void draw_line_kalman(Point p, int sz, Scalar c) {
 
-
-        void draw_line_kalman(Point p, Scalar c){
+            if(transmatrix.empty())return;
+            vector<Point2f> mreal = {p};
+            vector<Point2f> mimage;
+            perspectiveTransform(mreal,mimage, this->transmatrix );
+            p=mimage[0];
 
             if(p.x<10 or p.y<10)
                 return;
@@ -114,7 +117,7 @@ namespace on_paper {
             Mat estimated = KF.correct(measurement_KF);
             Point statePt(estimated.at<int>(0),estimated.at<int>(1));
 
-            line(canvas, last_point, statePt, c, 2, LINE_AA);
+            line(canvas, last_point, statePt, c, sz, LINE_AA);
             last_point =statePt;
         }
 

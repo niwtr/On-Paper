@@ -20,7 +20,8 @@ void on_paper::OnPaper::main_loop(void) {
     if (TheCameraParameters.isValid())
         TheCameraParameters.resize(TheInputImage.size());
 
-    this->pa.init(TheInputImage.rows, TheInputImage.cols);
+    //this->pa.init(TheInputImage.rows, TheInputImage.cols);
+
 
     try {
 
@@ -38,17 +39,20 @@ void on_paper::OnPaper::main_loop(void) {
             TheVideoCapturer.retrieve(TheInputImage);
 //do something.
             ac.get_input_image(TheInputImage);
-            ac.process();
+            auto mknum = ac.process();//num of markers.
             hd.process(TheInputImage,mask);
             Point finger_tip = hd.get_fingertip();
+            
+            if(mknum > 0) //detected markers!
+            {
+                pa.with_transmatrix(ac.get_transmatrix_inv());
+                pa.draw_line_kalman(finger_tip, 5, Scalar(255, 255, 0));
+                ac.overlayCanvas(pa.get_canvas());//TODO 如果没有检测到Marker就不overlay
+            }
             ac.release_output_image(TheProcessedImage);
             circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 4);
-
-            pa.draw_line_kalman(finger_tip, Scalar(255, 255, 0));
-
-
-            Mat& canvas_mask = pa.get_canvas();
-            cv::addWeighted(canvas_mask, 1, TheProcessedImage, 1 , 0, TheProcessedImage);
+            //Mat& canvas_mask = pa.get_canvas(); //got the canvas!
+            //cv::addWeighted(canvas_mask, 1, TheProcessedImage, 1 , 0, TheProcessedImage);
 
             cv::imshow("ar", TheProcessedImage);
             cv::imshow("mask", mask);
