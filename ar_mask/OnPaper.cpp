@@ -42,8 +42,11 @@ void on_paper::OnPaper::main_loop(void) {
             hd.process(TheInputImage,mask);
             Point finger_tip = hd.get_fingertip();
             ac.release_output_image(TheProcessedImage);
-            circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 2);
-            pa.draw_point(finger_tip, Scalar(0,255,255));
+            circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 4);
+
+            pa.draw_line_kalman(finger_tip, Scalar(255, 255, 0));
+
+
             Mat& canvas_mask = pa.get_canvas();
             cv::addWeighted(canvas_mask, 1, TheProcessedImage, 1 , 0, TheProcessedImage);
 
