@@ -33,13 +33,20 @@ void on_paper::HandDetector::train(const cv::Mat& img, const cv::Mat& mask)
 	cout << avg_color / cnt << endl;
 }
 
+// 初始化新图
+void on_paper::HandDetector::init(int src_width)
+{
+	_prop = _tar_width * 1.0 / src_width;
+	_ctl_point = Point(0, 0);
+	_fingers.clear();
+	_center = Point(0, 0);
+	_r = 0;
+}
+
 // used otsu + YCrCb filter
 void on_paper::HandDetector::process(const cv::Mat& src, cv::Mat& dst)
 {
-	// 初始化新图
-	_prop = _tar_width * 1.0 / src.size().width;
-	_ctl_point = Point(0, 0);	
-	_fingers.clear();
+	init(src.size().width);
 
 	Mat src_std;
 	resize(src, src_std, Size(_tar_width, _prop * src.size().height));
@@ -224,7 +231,7 @@ void on_paper::HandDetector::ori_correct(cv::Mat& dst, const std::vector<cv::Poi
 }
 
 // 检测手掌
-void on_paper::HandDetector::detect_palm(const cv::Mat& src_hand, const std::vector<cv::Point>& contour, cv::Point& center, int& r)
+void on_paper::HandDetector::detect_palm(const cv::Mat& src_hand, const std::vector<cv::Point>& contour)
 {
 	// 距离变换
 	Mat dist;
@@ -253,8 +260,8 @@ void on_paper::HandDetector::detect_palm(const cv::Mat& src_hand, const std::vec
 		}
 	}
 
-	center = Point(cx, cy);
-	r = R;
+	_center = Point(cx, cy);
+	_r = R;
 
 	//normalize(dist, dst_palm, 0, 1, CV_MINMAX);
 }
@@ -276,7 +283,7 @@ float on_paper::HandDetector::get_angle(cv::Point s, cv::Point f, cv::Point e) {
 }
 
 // 处理一个轮廓
-void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::Point> &contour, const cv::Point center, const int r)
+void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::Point> &contour)
 {
 	vector<Point> hull;
 	vector<int> hullsI;
@@ -308,18 +315,25 @@ void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::
 	float tmp_max = 0, tmp = 0;
 	Point far_max(0, 0);
 
-    int y_high = dst.rows;
-    int y_low = 0, y_mean;
-    for(const auto& I : hullsI){
-        y_high = approxCurve[I].y<y_high?approxCurve[I].y:y_high;
-        y_low = approxCurve[I].y>y_low?approxCurve[I].y:y_low;
-    } y_mean = (y_high+y_low)/2;
+    //int y_high = dst.rows;
+    //int y_low = 0, y_mean;
+    //for(const auto& I : hullsI){
+    //    y_high = approxCurve[I].y<y_high?approxCurve[I].y:y_high;
+    //    y_low = approxCurve[I].y>y_low?approxCurve[I].y:y_low;
+    //} y_mean = (y_high+y_low)/2;
 
 	for (int j = 0; j < hullsI.size(); j++)
 	{
 		int k = hullsI[j];
-        if(approxCurve[k].y>y_mean)continue;
-		tmp = distance_P2P(center, approxCurve[k]);
+   //     if(approxCurve[k].y > y_mean)
+			//continue;
+
+		// 掌心以下的点不作为指尖
+		if (approxCurve[k].y > _center.y)
+			continue;
+
+		// 寻找最远指尖坐标
+		tmp = distance_P2P(_center, approxCurve[k]);
 		if (tmp_max < tmp)
 		{
 			tmp_max = tmp;
@@ -375,13 +389,11 @@ void on_paper::HandDetector::hand_contours(const cv::Mat& src, cv::Mat& dst)
 	int idx = biggest_contour(contours);
 
 	// 检测手掌
-	Point center;
-	int r;
-	detect_palm(src, contours[idx], center, r);
-	circle(dst, center, r, Scalar(255, 0, 0));
+	detect_palm(src, contours[idx]);
+	circle(dst, _center, _r, Scalar(255, 0, 0));
 
 	// 处理轮廓	
-	handle_contour(dst, contours[idx], center, r);
+	handle_contour(dst, contours[idx]);
 
 	// 画出所有轮廓
 	//int va_contours = 0;

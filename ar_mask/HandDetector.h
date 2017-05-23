@@ -11,7 +11,7 @@
 #define MIN_Y 30
 
 #define THRESHOLD_AREA 20
-#define MAX_CONTOURS_SIZE 5
+#define MAX_CONTOURS_SIZE 8
 #define THRESHOLD_ANGLE 80
 #define BLUR_KSIZE 5
 #define PI 3.14
@@ -38,18 +38,20 @@ namespace on_paper {
 		vector<Point> get_fingers();
 
 	private:
+		void init(int src_width);
+
 		// two methods of hand mask
 		void hand_mask(const Mat& src_std, Mat& dst);
 		void hand_mask2(const Mat& src_std, Mat& dst);
 
 		// detect and handle contours
 		void hand_contours(const Mat& src, Mat& dst);
-		void handle_contour(Mat& dst, const vector<Point> &contour, const Point center, const int r);
+		void handle_contour(Mat& dst, const vector<Point> &contour);
 		void draw_contour(Mat& dst, const vector<Point> &contour, const Scalar& color, int thickness = 1);
 		int biggest_contour(vector<vector<Point> > &contours);
 
 		// palm center and radius
-		void detect_palm(const Mat& src_hand, const vector<Point>& contour, Point& center, int& r);
+		void detect_palm(const Mat& src_hand, const vector<Point>& contour);
 
 		void ori_correct(Mat& dst, const vector<Point> &contour);
 		// tools
@@ -62,14 +64,15 @@ namespace on_paper {
 		void threashold_C(const Mat& src, Mat& dst, int color_code);
 		void threashold_YCrCb(const Mat& src, Mat& dst);
 		void threashold_YUV(const Mat& src, Mat& dst);
-
 		void threashold_Y(const Mat& src, Mat& dst);
 
 
-		int _tar_width;
-		Point _ctl_point;
-		double _prop;
-		vector<Point> _fingers;
+		int _tar_width;		// 处理图像宽度
+		Point _ctl_point;	// 指尖（最长手指）
+		double _prop;		// 缩放比例
+		vector<Point> _fingers;		// 所有手指
+		Point _center;		// 掌心坐标
+		int _r;				// 掌心半径
 	};
 
 }
