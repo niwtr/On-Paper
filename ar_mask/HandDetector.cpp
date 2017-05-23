@@ -289,10 +289,18 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const 
 	// 找距离掌心最远凸包点
 	float tmp_max = 0, tmp = 0;
 	Point far_max(0, 0);
+
+    int y_high = dst.rows;
+    int y_low = 0, y_mean;
+    for(const auto& I : hullsI){
+        y_high = approxCurve[I].y<y_high?approxCurve[I].y:y_high;
+        y_low = approxCurve[I].y>y_low?approxCurve[I].y:y_low;
+    } y_mean = (y_high+y_low)/2;
+
 	for (int j = 0; j < hullsI.size(); j++)
 	{
 		int k = hullsI[j];
-
+        if(approxCurve[k].y>y_mean)continue;
 		tmp = distance_P2P(center, approxCurve[k]);
 		if (tmp_max < tmp && approxCurve[k].x != dst.cols-1 && approxCurve[k].y != dst.rows-1) // 指尖不会出现在边缘
 		{
