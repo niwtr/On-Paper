@@ -12,6 +12,7 @@
 #include <iostream>
 #include <opencv/cv.hpp>
 #include <vector>
+#include <opencv2/highgui.hpp>
 
 #define EUCLID_DIST(A,B) (sqrt(fabs(pow(A.x - B.x, 2) + pow(A.y - B.y, 2))))
 
@@ -30,23 +31,30 @@ namespace on_paper {
     class Painter {
     private:
         Mat canvas;
+        Mat canvas_layer;
         int canv_height;
         int canv_width;
         cv::KalmanFilter KF;
         Point last_point;
-
-        Mat state_KF;
         Mat measurement_KF;
-        Mat process_noise_KF;
+
 
         Mat transmatrix ; //matrix for transforming lines to original image.
     public:
 
-        Mat &get_canvas() { return this->canvas; }
+        Mat& get_canvas_layer() { return this->canvas_layer; }
 
         Painter(){}
 
+        // M: inverted, from real to image.
         void with_transmatrix(const Mat &M){this->transmatrix=M;}
+        // M: original, from image to real.
+        void transform_canvas(const Mat& M, Size sz){
+            if(M.empty())
+                return;
+            warpPerspective(canvas, canvas_layer, M, sz, INTER_NEAREST);
+        }
+
 
         void init(int rows, int cols) {
             this->canv_height = rows;
@@ -62,7 +70,7 @@ namespace on_paper {
             Mat_<float> measurement(2,1); measurement.setTo(Scalar(0));
             measurement_KF=measurement;
 
-// init...
+            // init...
             KF.statePre.at<float>(0) = 0;
             KF.statePre.at<float>(1) = 0;
             KF.statePre.at<float>(2) = 0;
@@ -89,11 +97,11 @@ namespace on_paper {
         void draw_line_kalman(Point p, int sz, Scalar c) {
 
             if(transmatrix.empty())return;
+
             vector<Point2f> mreal = {p};
             vector<Point2f> mimage;
             perspectiveTransform(mreal,mimage, this->transmatrix );
             p=mimage[0];
-
             if(p.x<10 or p.y<10)
                 return;
             if(last_point.x<10 or last_point.y<10){
@@ -118,14 +126,15 @@ namespace on_paper {
             Point statePt(estimated.at<int>(0),estimated.at<int>(1));
 
             line(canvas, last_point, statePt, c, sz, LINE_AA);
+
             last_point =statePt;
         }
 
-        void draw_points(vector<Point> &v, Scalar c);
 
         void clear_canvas(void);
     };
 }
 
 
+#undef EUCLID_DIST
 #endif //ARTEST_PAINTER_H

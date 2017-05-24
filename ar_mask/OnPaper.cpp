@@ -37,26 +37,40 @@ void on_paper::OnPaper::main_loop(void) {
         do {
 
             TheVideoCapturer.retrieve(TheInputImage);
-//do something.
+            //do something.
             ac.get_input_image(TheInputImage);
             auto mknum = ac.process();//num of markers.
-            hd.process(TheInputImage,mask);
-            Point finger_tip = hd.get_fingertip();
-            
+            GestureType gt = gj.get_gesture(TheInputImage);
+            mask = gj.mask;
+            Point finger_tip=Point(0,0);
+
+            if(gt == GestureType::PRESS)
+                finger_tip = gj.key_point();
+
+            // let pa to rock.
             if(mknum > 0) //detected markers!
             {
                 pa.with_transmatrix(ac.get_transmatrix_inv());
-                pa.draw_line_kalman(finger_tip, 5, Scalar(255, 255, 0));
-                ac.overlayCanvas(pa.get_canvas());//TODO 如果没有检测到Marker就不overlay
+                if(gt == GestureType::PRESS)
+                    pa.draw_line_kalman(finger_tip, 5, Scalar(255, 255, 0));
+                pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
             }
-            ac.release_output_image(TheProcessedImage);
-            circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 4);
-            //Mat& canvas_mask = pa.get_canvas(); //got the canvas!
-            //cv::addWeighted(canvas_mask, 1, TheProcessedImage, 1 , 0, TheProcessedImage);
+
+            //Overlay!
+
+            lm.capture(TheInputImage);
+            if(mknum>0) {
+                lm.capture(ac.get_virtual_paper_layer());
+                lm.capture(pa.get_canvas_layer());
+            }
+            lm.overlay();
+            lm.output(TheProcessedImage);
+            if(gt!=GestureType::NONE)
+                circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 4);
 
             cv::imshow("ar", TheProcessedImage);
             cv::imshow("mask", mask);
-            //cv::imshow("canvas", canvas_mask);
+
             key = (char)cv::waitKey(1); // wait for key to be pressed
             if(key=='s')  {
                 waitTime= waitTime==0?1:0;

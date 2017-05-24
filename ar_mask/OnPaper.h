@@ -8,8 +8,8 @@
 #include "ARCapturer.h"
 #include "HandDetector.h"
 #include "Painter.h"
-
-
+#include "GesureJudge.h"
+#include "LayerManager.h"
 
 #ifdef _WIN32
 
@@ -26,27 +26,24 @@
 
 namespace on_paper {
     class OnPaper {
-    public:
-        int hd_width;
     private:
         VideoCapture TheVideoCapturer;
         CameraParameters TheCameraParameters;
         Mat TheInputImage;
         Mat TheProcessedImage;
+
         ARCapturer ac;
-        //TODO 把HandDetector加入OnPaper命名空间。
-        HandDetector hd;
+        GestureJudge gj;
+        LayerManager lm;
         Painter pa;
 
     public:
-        //TODO 为构造函数添加合适的参数
-        OnPaper(int hdwidth = 320):hd_width(hdwidth),hd(hdwidth){}
+        OnPaper(){}
         void init(void){
             TheCameraParameters.readFromXMLFile(string(ROOT) + "camera.yml");
             ac.init(TheCameraParameters);
             const Mat& img = ac.get_image();
             pa.init(img.rows, img.cols);
-
         }
         void main_loop(void);
 

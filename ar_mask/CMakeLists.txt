@@ -16,7 +16,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 
 
-set(SOURCE_FILES main.cpp ARCapturer.cpp ARCapturer.h HandDetector.cpp HandDetector.h OnPaper.cpp OnPaper.h Painter.cpp Painter.h)
+set(SOURCE_FILES main.cpp ARCapturer.cpp ARCapturer.h HandDetector.cpp HandDetector.h OnPaper.cpp OnPaper.h Painter.cpp Painter.h LayerManager.cpp LayerManager.h GesureJudge.cpp GesureJudge.h cvutils.h)
 add_executable(ar_mask ${SOURCE_FILES})
 
 target_link_libraries(ar_mask /usr/local/Cellar/poppler/0.54.0/lib/libpoppler-cpp.0.dylib)

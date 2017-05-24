@@ -65,48 +65,7 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
 
 }
 
-void on_paper::ARCapturer::
-overlayImage(const cv::Mat &background, const cv::Mat &foreground,
-             cv::Mat &output, cv::Point2i location) {
-    background.copyTo(output);
-    // start at the row indicated by location, or at row 0 if location.y is negative.
-    for(int y = std::max(location.y , 0); y < background.rows; ++y)
-    {
-        int fY = y - location.y; // because of the translation
 
-        // we are done of we have processed all rows of the foreground image.
-        if(fY >= foreground.rows)
-            break;
-        // start at the column indicated by location,
-        // or at column 0 if location.x is negative.
-        for(int x = std::max(location.x, 0); x < background.cols; ++x)
-        {
-            int fX = x - location.x; // because of the translation.
-
-            // we are done with this row if the column is outside of the foreground image.
-            if(fX >= foreground.cols)
-                break;
-
-            // determine the opacity of the foregrond pixel, using its fourth (alpha) channel.
-            double opacity =
-                    ((double)foreground.data[fY * foreground.step + fX * foreground.channels() + 3])
-
-                    / 255.;
-            // and now combine the background and foreground pixel, using the opacity,
-            // but only if opacity > 0.
-            for(int c = 0; opacity > 0 && c < output.channels(); ++c)
-            {
-                unsigned char foregroundPx =
-                        foreground.data[fY * foreground.step + fX * foreground.channels() + c];
-                unsigned char backgroundPx =
-                        background.data[y * background.step + x * background.channels() + c];
-                output.data[y*output.step + output.channels()*x + c] =
-                        backgroundPx * (1.-opacity) + foregroundPx * opacity;
-            }
-        }
-    }
-
-}
 #define S2(X) ((X)*(X))
 template<typename vecpf>
 float on_paper::ARCapturer::euclid_dist(const vecpf &v1, const vecpf &v2) {
@@ -187,9 +146,9 @@ void on_paper::ARCapturer::map_markers(void) {
         vector<Point2f> __virtual_paper;
         perspectiveTransform(shifted_pattern_paper_source[lamaker.id%4], __virtual_paper, M0);
 
-        circle(TheInputImageCopy, mcenter, 10, Scalar(0,255,0),10);
-        for(int ii=0;ii< 4;ii++)
-                    circle(TheInputImageCopy, lamaker[ii], 10, Scalar(0, ii*50, 0), 10);
+        //circle(TheInputImageCopy, mcenter, 10, Scalar(0,255,0),10);
+        //for(int ii=0;ii< 4;ii++)
+//                    circle(TheInputImageCopy, lamaker[ii], 10, Scalar(0, ii*50, 0), 10);
 
         if(virtual_paper.size()==0)
             virtual_paper=__virtual_paper;
@@ -201,13 +160,16 @@ void on_paper::ARCapturer::map_markers(void) {
     //把原图投射到虚拟纸张上。
     Mat M = getPerspectiveTransform(original_image_pattern, virtual_paper);
     Mat M_inv = getPerspectiveTransform(virtual_paper, original_image_pattern);
-    this->transmatrix_inv = M_inv; //set val to M.
-    this->transmatrix = M;
+    this->transmatrix_inv = M_inv; //set val to M_inv.
+    this->transmatrix = M; // set val to M.
     Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
     warpPerspective(image, transf, M, TheInputImageCopy.size(), cv::INTER_NEAREST);
     white_transparent(transf, transf);
+
+    VirtualPaperImage = transf;
+
     //Mat output;
-    overlayImage(TheInputImageCopy, transf, TheInputImageCopy, Point(0, 0));
+    //overlayImage(TheInputImageCopy, transf, TheInputImageCopy, Point(0, 0));
 }
 
 vector<cv::Point2f> on_paper::ARCapturer::vector_avg2(const vector<cv::Point2f> &src1, const vector<cv::Point2f> &src2)
@@ -233,31 +195,24 @@ void on_paper::ARCapturer::anti_shake(void) {
 }
 
 void on_paper::ARCapturer::fill_markers(void) {
-    return;
     for(auto& lamaker : TheMarkers) {//fill the marker with white.
-        constexpr const int covering_shift = 10;
         vector<Point> corners(lamaker.begin(), lamaker.end());
-        corners[0].x-=covering_shift;corners[0].y-=covering_shift;
-        corners[1].x+=covering_shift;corners[1].y-=covering_shift;
-        corners[2].x+=covering_shift;corners[2].y+=covering_shift;
-        corners[3].x-=covering_shift;corners[3].y+=covering_shift;
-
         vector<vector<Point>> c_corners = {corners};
         fillPoly(TheInputImageCopy, c_corners, Scalar(180, 180, 180));
     }
 }
 
-void on_paper::ARCapturer::overlayCanvas(const cv::Mat &canvas) {
-    if(transmatrix.empty())//当transmatrix为空的时候可不要overlay。这是初始情况
-        //TODO 尽量避免初始情况。使用更优雅的初始化函数。
-        return;
-    //TODO 尽量减少cvtColor?
-    cvtColor(TheInputImageCopy, TheInputImageCopy, CV_BGRA2BGR);
-    Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC3);
-    warpPerspective(canvas, transf, this->transmatrix, TheInputImageCopy.size(), cv::INTER_NEAREST);
-    cv::addWeighted(transf, 1, TheInputImageCopy, 1, 0, TheInputImageCopy);
-
-}
+//void on_paper::ARCapturer::overlayCanvas(const cv::Mat &canvas) {
+//    if(transmatrix.empty())//当transmatrix为空的时候可不要overlay。这是初始情况
+//        //TODO 尽量避免初始情况。使用更优雅的初始化函数。
+//        return;
+//    //TODO 尽量减少cvtColor?
+//    cvtColor(TheInputImageCopy, TheInputImageCopy, CV_BGRA2BGR);
+//    Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC3);
+//    warpPerspective(canvas, transf, this->transmatrix, TheInputImageCopy.size(), cv::INTER_NEAREST);
+//    cv::addWeighted(transf, 1, TheInputImageCopy, 1, 0, TheInputImageCopy);
+//
+//}
 
 #undef distance
 

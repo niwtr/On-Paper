@@ -3,13 +3,9 @@
 //
 
 
+
 #include "Painter.h"
 
-//void on_paper::Painter::draw_points(std::vector<cv::Point> &v, Scalar c) {
-//    for(auto& p : v) {
-//        circle(this->canvas, p, 2, c, 2);
-//    }
-//}
 
 void on_paper::Painter::clear_canvas(void)
 {
