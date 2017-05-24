@@ -14,7 +14,7 @@
 #define MAX_CONTOURS_SIZE 8
 #define THRESHOLD_ANGLE 80
 #define BLUR_KSIZE 5
-#define PI 3.14
+//#define PI 3.14
 
 namespace on_paper {
 	using namespace cv;
@@ -29,10 +29,6 @@ namespace on_paper {
 
 	class HandDetector
 	{
-		// tools
-		friend void drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color);
-		friend float distance_P2P(Point a, Point b);
-		friend float get_angle(Point s, Point f, Point e);
 
 	public:
 		HandDetector(int tar_width);

@@ -12,6 +12,40 @@ namespace on_paper{
     using namespace cv;
     class utils {
     public:
+        constexpr const static float PI = 3.14;
+
+        static void drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color){
+                if (theta < PI / 4. || theta > 3.*PI / 4.)// ~vertical line
+                {
+                    Point pt1(rho / cos(theta), 0);
+                    Point pt2((rho - image.rows * sin(theta)) / cos(theta), image.rows);
+                    line(image, pt1, pt2, Scalar(255), 1);
+                }
+                else
+                {
+                    Point pt1(0, rho / sin(theta));
+                    Point pt2(image.cols, (rho - image.cols * cos(theta)) / sin(theta));
+                    line(image, pt1, pt2, color, 1);
+                }
+        }
+
+        // 两点距离
+        static float distance_P2P(cv::Point a, cv::Point b) {
+            float d = sqrt(fabs(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)));
+            return d;
+        }
+
+// 获得三点角度(弧度制)
+        static float get_angle(cv::Point s, cv::Point f, cv::Point e) {
+            float l1 = distance_P2P(f, s);
+            float l2 = distance_P2P(f, e);
+            float dot = (s.x - f.x)*(e.x - f.x) + (s.y - f.y)*(e.y - f.y);
+            float angle = acos(dot / (l1*l2));
+            angle = angle * 180 / PI;
+            return angle;
+        }
+
+
         static void overlay_BGR(const Mat& background, const Mat& foreground, Mat& output) {
             //if(transmatrix.empty())//当transmatrix为空的时候可不要overlay。这是初始情况
             //    //TODO 尽量避免初始情况。使用更优雅的初始化函数。

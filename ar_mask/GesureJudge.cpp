@@ -1,6 +1,6 @@
 
 #include "GesureJudge.h"
-
+#include "cvutils.h"
 on_paper::GestureType on_paper::GestureJudge::get_gesture(const cv::Mat& src)
 {
 	_hd.process(src, mask);
@@ -12,8 +12,8 @@ on_paper::GestureType on_paper::GestureJudge::get_gesture(const cv::Mat& src)
 		return PRESS;
 	else {
 		Vec3p dft = defects[0];
-		float f1 = distance_P2P(dft[0], dft[1]);
-		float f2 = distance_P2P(dft[2], dft[1]);
+		float f1 = utils::distance_P2P(dft[0], dft[1]);
+		float f2 = utils::distance_P2P(dft[2], dft[1]);
 
 		if (f1 / f2 > 1.5 || f2 / f1 > 1.5) {
 			return ENLARGE;
