@@ -1,4 +1,4 @@
-#include "HandDetector.h"
+ï»¿#include "HandDetector.h"
 
 on_paper::HandDetector::HandDetector(int tar_width) :
 	_tar_width(tar_width)
@@ -33,12 +33,13 @@ void on_paper::HandDetector::train(const cv::Mat& img, const cv::Mat& mask)
 	cout << avg_color / cnt << endl;
 }
 
-// ³õÊ¼»¯ĞÂÍ¼
+// åˆå§‹åŒ–æ–°å›¾
 void on_paper::HandDetector::init(int src_width)
 {
 	_prop = _tar_width * 1.0 / src_width;
 	_ctl_point = Point(0, 0);
 	_fingers.clear();
+	_defects.clear();
 	_center = Point(0, 0);
 	_r = 0;
 }
@@ -61,7 +62,7 @@ void on_paper::HandDetector::process(const cv::Mat& src, cv::Mat& dst)
 	dst = src_std;
 }
 
-// °´±ÈÀı»¹Ô­µã
+// æŒ‰æ¯”ä¾‹è¿˜åŸç‚¹
 cv::Point on_paper::HandDetector::cvt_prop(cv::Point p)
 {
 	Point rtn;
@@ -83,6 +84,15 @@ std::vector<cv::Point> on_paper::HandDetector::get_fingers()
 		fgs.push_back(cvt_prop(fg));
 
 	return fgs;
+}
+
+std::vector<on_paper::Vec3p> on_paper::HandDetector::get_defects()
+{
+	vector<Vec3p> dfts;
+	for (Vec3p df : _defects)
+		dfts.push_back(Vec3p(cvt_prop(df[0]), cvt_prop(df[1]), cvt_prop(df[2])));
+
+	return dfts;
 }
 
 // detect hand mask: method 1
@@ -199,7 +209,7 @@ void on_paper::HandDetector::draw_contour(cv::Mat& dst, const std::vector<cv::Po
 	drawContours(dst, tmp_points, 0, color, 1);
 }
 
-void on_paper::HandDetector::drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color)
+void on_paper::drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color)
 {
 	if (theta < PI / 4. || theta > 3.*PI / 4.)// ~vertical line
 	{
@@ -215,7 +225,7 @@ void on_paper::HandDetector::drawLine(cv::Mat &image, double theta, double rho, 
 	}
 }
 
-// ½ÃÕıÊÖ²¿·½Ïò
+// çŸ«æ­£æ‰‹éƒ¨æ–¹å‘
 void on_paper::HandDetector::ori_correct(cv::Mat& dst, const std::vector<cv::Point> &contour)
 {
 	Vec4f li;
@@ -230,14 +240,14 @@ void on_paper::HandDetector::ori_correct(cv::Mat& dst, const std::vector<cv::Poi
 	drawLine(dst, phi, rho, Scalar(0));
 }
 
-// ¼ì²âÊÖÕÆ
+// æ£€æµ‹æ‰‹æŒ
 void on_paper::HandDetector::detect_palm(const cv::Mat& src_hand, const std::vector<cv::Point>& contour)
 {
-	// ¾àÀë±ä»»
+	// è·ç¦»å˜æ¢
 	Mat dist;
 	distanceTransform(src_hand, dist, DIST_L2, 3);
 
-	// ¼ì²â×îĞ¡¾ØĞÎ£¬ËõĞ¡¼ì²â·¶Î§
+	// æ£€æµ‹æœ€å°çŸ©å½¢ï¼Œç¼©å°æ£€æµ‹èŒƒå›´
 	Rect rec = boundingRect(contour);
 
 	int temp = 0, R = 0, cx = 0, cy = 0, flag;
@@ -245,7 +255,7 @@ void on_paper::HandDetector::detect_palm(const cv::Mat& src_hand, const std::vec
 	{
 		for (int j = rec.x; j < rec.x + rec.width; j++)
 		{
-			// ¼ì²âÊÇ·ñÔÚÂÖÀªÄÚ£¬Ó°ÏìÊµÊ±ĞÔ
+			// æ£€æµ‹æ˜¯å¦åœ¨è½®å»“å†…ï¼Œå½±å“å®æ—¶æ€§
 			//flag = pointPolygonTest(contour, Point2f(j, i), 0);	
 			//if (flag > 0)
 			{
@@ -266,14 +276,14 @@ void on_paper::HandDetector::detect_palm(const cv::Mat& src_hand, const std::vec
 	//normalize(dist, dst_palm, 0, 1, CV_MINMAX);
 }
 
-// Á½µã¾àÀë
-float on_paper::HandDetector::distance_P2P(cv::Point a, cv::Point b) {
+// ä¸¤ç‚¹è·ç¦»
+float on_paper::distance_P2P(cv::Point a, cv::Point b) {
 	float d = sqrt(fabs(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)));
 	return d;
 }
 
-// »ñµÃÈıµã½Ç¶È(»¡¶ÈÖÆ)
-float on_paper::HandDetector::get_angle(cv::Point s, cv::Point f, cv::Point e) {
+// è·å¾—ä¸‰ç‚¹è§’åº¦(å¼§åº¦åˆ¶)
+float on_paper::get_angle(cv::Point s, cv::Point f, cv::Point e) {
 	float l1 = distance_P2P(f, s);
 	float l2 = distance_P2P(f, e);
 	float dot = (s.x - f.x)*(e.x - f.x) + (s.y - f.y)*(e.y - f.y);
@@ -282,7 +292,7 @@ float on_paper::HandDetector::get_angle(cv::Point s, cv::Point f, cv::Point e) {
 	return angle;
 }
 
-// ´¦ÀíÒ»¸öÂÖÀª
+// å¤„ç†ä¸€ä¸ªè½®å»“
 void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::Point> &contour)
 {
 	vector<Point> hull;
@@ -292,26 +302,26 @@ void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::
 
 	Scalar color = Scalar(255, 255, 255);
 
-	// µÀ¸ñÀ­Ë¹-ÆÕ¿ËËã·¨
+	// é“æ ¼æ‹‰æ–¯-æ™®å…‹ç®—æ³•
 	approxPolyDP(Mat(contour), approxCurve, 15, true);
 
-	// ¼ÆËã±Õ°üºÍÍ¹È±Ïİ
+	// è®¡ç®—é—­åŒ…å’Œå‡¸ç¼ºé™·
 	convexHull(Mat(approxCurve), hull, false);
 	convexHull(Mat(approxCurve), hullsI, false);
 
-	// »­³öÂÖÀªºÍÍ¹°ü
+	// ç”»å‡ºè½®å»“å’Œå‡¸åŒ…
 	//draw_contour(dst, contour, color, 2);
 	draw_contour(dst, approxCurve, color, 1);
 	draw_contour(dst, hull, color, 1);
 
-	// Î´¼ì²âµ½ÊÖÖ¸£¨ÊÖÕÆ±ÕºÏ×´Ì¬£©
+	// æœªæ£€æµ‹åˆ°æ‰‹æŒ‡ï¼ˆæ‰‹æŒé—­åˆçŠ¶æ€ï¼‰
 	//if (matchShapes(approxCurve, hull, CV_CONTOURS_MATCH_I1, 0) == 0)
 //		return;
 
-	// ¾ÀÕı·½Ïò
+	// çº æ­£æ–¹å‘
 	//ori_correct(dst, contour);
 
-	// ÕÒ¾àÀëÕÆĞÄ×îÔ¶Í¹°üµã
+	// æ‰¾è·ç¦»æŒå¿ƒæœ€è¿œå‡¸åŒ…ç‚¹
 	float tmp_max = 0, tmp = 0;
 	Point far_max(0, 0);
 
@@ -328,11 +338,11 @@ void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::
    //     if(approxCurve[k].y > y_mean)
 			//continue;
 
-		// ÕÆĞÄÒÔÏÂµÄµã²»×÷ÎªÖ¸¼â
+		// æŒå¿ƒä»¥ä¸‹çš„ç‚¹ä¸ä½œä¸ºæŒ‡å°–
 		if (approxCurve[k].y > _center.y)
 			continue;
 
-		// Ñ°ÕÒ×îÔ¶Ö¸¼â×ø±ê
+		// å¯»æ‰¾æœ€è¿œæŒ‡å°–åæ ‡
 		tmp = distance_P2P(_center, approxCurve[k]);
 		if (tmp_max < tmp)
 		{
@@ -341,7 +351,7 @@ void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::
 		}
 	}
 	
-	// ¼ÆËãÍ¹È±Ïİ
+	// è®¡ç®—å‡¸ç¼ºé™·
 	convexityDefects(Mat(approxCurve), hullsI, defects);
 	vector<Vec4i>::iterator d = defects.begin();
 	while (d != defects.end()) {
@@ -356,6 +366,8 @@ void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::
 			circle(dst, pt_s, 4, Scalar(255, 0, 100), 2);
 			circle(dst, pt_e, 4, Scalar(255, 0, 100), 2);
 			circle(dst, pt_f, 4, Scalar(100, 0, 255), 2);
+
+			_defects.push_back(Vec3p(pt_s, pt_f, pt_e));
 
 			if (find(_fingers.begin(), _fingers.end(), pt_s) == _fingers.end())
 				_fingers.push_back(pt_s);
@@ -375,27 +387,27 @@ void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::
 	}
 }
 
-// ¼ì²âÊÖ²¿ÂÖÀª
+// æ£€æµ‹æ‰‹éƒ¨è½®å»“
 void on_paper::HandDetector::hand_contours(const cv::Mat& src, cv::Mat& dst)
 {
 	vector<vector<Point> > contours;
 	findContours(src, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
-	// Î´¼ì²âµ½ÊÖ
+	// æœªæ£€æµ‹åˆ°æ‰‹
 	if (contours.size() == 0 || contours.size() > MAX_CONTOURS_SIZE)
 		return;
 
-	// ¼ì²â×î´óÂÖÀª
+	// æ£€æµ‹æœ€å¤§è½®å»“
 	int idx = biggest_contour(contours);
 
-	// ¼ì²âÊÖÕÆ
+	// æ£€æµ‹æ‰‹æŒ
 	detect_palm(src, contours[idx]);
 	circle(dst, _center, _r, Scalar(255, 0, 0));
 
-	// ´¦ÀíÂÖÀª	
+	// å¤„ç†è½®å»“	
 	handle_contour(dst, contours[idx]);
 
-	// »­³öËùÓĞÂÖÀª
+	// ç”»å‡ºæ‰€æœ‰è½®å»“
 	//int va_contours = 0;
 	//for (int i = 0; i < contours.size(); i++) {
 	//	double area = contourArea(contours[i]);
