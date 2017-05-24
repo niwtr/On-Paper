@@ -12,7 +12,7 @@
 
 #define THRESHOLD_AREA 20
 #define MAX_CONTOURS_SIZE 8
-#define THRESHOLD_ANGLE 80
+#define THRESHOLD_ANGLE 90
 #define BLUR_KSIZE 5
 //#define PI 3.14
 
