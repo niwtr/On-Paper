@@ -14,6 +14,7 @@ namespace on_paper {
 	enum GestureType {
 		PRESS,
 		MOVE,
+		ENLARGE,
 		NONE
 	};
 

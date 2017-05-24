@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
@@ -29,6 +29,11 @@ namespace on_paper {
 
 	class HandDetector
 	{
+		// tools
+		friend void drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color);
+		friend float distance_P2P(Point a, Point b);
+		friend float get_angle(Point s, Point f, Point e);
+
 	public:
 		HandDetector(int tar_width);
 
@@ -36,6 +41,7 @@ namespace on_paper {
 		void process(const Mat& src, Mat& des);
 		Point get_fingertip();
 		vector<Point> get_fingers();
+		vector<Vec3p> get_defects();
 
 	private:
 		void init(int src_width);
@@ -53,11 +59,8 @@ namespace on_paper {
 		// palm center and radius
 		void detect_palm(const Mat& src_hand, const vector<Point>& contour);
 
-		void ori_correct(Mat& dst, const vector<Point> &contour);
 		// tools
-		void drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color);
-		float distance_P2P(Point a, Point b);
-		float get_angle(Point s, Point f, Point e);
+		void ori_correct(Mat& dst, const vector<Point> &contour);
 		Point cvt_prop(Point p);
 
 		// threshold for skin
@@ -67,12 +70,14 @@ namespace on_paper {
 		void threashold_Y(const Mat& src, Mat& dst);
 
 
-		int _tar_width;		// ´¦ÀíÍ¼Ïñ¿í¶È
-		Point _ctl_point;	// Ö¸¼â£¨×î³¤ÊÖÖ¸£©
-		double _prop;		// Ëõ·Å±ÈÀı
-		vector<Point> _fingers;		// ËùÓĞÊÖÖ¸
-		Point _center;		// ÕÆĞÄ×ø±ê
-		int _r;				// ÕÆĞÄ°ë¾¶
+		int _tar_width;		// å¤„ç†å›¾åƒå®½åº¦
+		Point _ctl_point;	// æŒ‡å°–ï¼ˆæœ€é•¿æ‰‹æŒ‡ï¼‰
+		double _prop;		// ç¼©æ”¾æ¯”ä¾‹
+		vector<Point> _fingers;		// æ‰€æœ‰æ‰‹æŒ‡
+
+		vector<Vec3p> _defects;		// å‡¸ç¼ºé™·
+		Point _center;		// æŒå¿ƒåæ ‡
+		int _r;				// æŒå¿ƒåŠå¾„
 	};
 
 }
