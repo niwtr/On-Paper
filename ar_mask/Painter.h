@@ -13,6 +13,7 @@
 #include <opencv/cv.hpp>
 #include <vector>
 #include <opencv2/highgui.hpp>
+#include "cvutils.h"
 
 #define EUCLID_DIST(A,B) (sqrt(fabs(pow(A.x - B.x, 2) + pow(A.y - B.y, 2))))
 
@@ -35,6 +36,7 @@ namespace on_paper {
         int canv_height;
         int canv_width;
         cv::KalmanFilter KF;
+    public:
         Point last_point;
         Mat measurement_KF;
 
@@ -54,13 +56,10 @@ namespace on_paper {
                 return;
             warpPerspective(canvas, canvas_layer, M, sz, INTER_NEAREST);
         }
-
-
-        void init(int rows, int cols) {
-            this->canv_height = rows;
-            this->canv_width = cols;
-            this->canvas = Mat::zeros(rows, cols, CV_8UC3);
-            /* init kalman filter */
+        void clear_last(){
+            this->last_point = Point(0,0);
+        }
+        void initKF(){
 
             const int stat_num = 4;//是什么？
             const int measure_num = 2;//是什么？
@@ -79,10 +78,17 @@ namespace on_paper {
             setIdentity(KF.processNoiseCov, Scalar::all(1e-4));
             setIdentity(KF.measurementNoiseCov, Scalar::all(1e-1));
             setIdentity(KF.errorCovPost, Scalar::all(.1));
+        }
+        void init(int rows, int cols) {
+            this->canv_height = rows;
+            this->canv_width = cols;
+            this->canvas = Mat::zeros(rows, cols, CV_8UC3);
+            /* init kalman filter */
+            initKF();
 
         }
         void draw_line_simple(Point p, Scalar c){
-            if(p.x<10 or p.y<10)
+            if(p.x<10 or p.y<10 )
                 return;
             if(last_point.x<10 or last_point.y<10){
                 last_point = p;
@@ -94,20 +100,15 @@ namespace on_paper {
 
         }
 
-        void draw_line_kalman(Point p, int sz, Scalar c) {
-
-            if(transmatrix.empty())return;
-
+        //must ensure the transmatrix is not empty first.
+        void transform_point(Point& p){
             vector<Point2f> mreal = {p};
             vector<Point2f> mimage;
             perspectiveTransform(mreal,mimage, this->transmatrix );
-            p=mimage[0];
-            if(p.x<10 or p.y<10)
-                return;
-            if(last_point.x<10 or last_point.y<10){
-                last_point = p;
-                return;
-            }
+            p = mimage[0];
+        }
+
+        Point kalman_smooth(const Point &p){
 
             //  predict, to update the internal statePre variable
             Mat prediction = KF.predict();
@@ -117,16 +118,27 @@ namespace on_paper {
             measurement_KF.at<int>(0) = p.x;
             measurement_KF.at<int>(1) = p.y;
 
-
-            //Point measPt(measurement_KF(0),measurement_KF(1));
             Point measPt(measurement_KF);
-
-
             Mat estimated = KF.correct(measurement_KF);
             Point statePt(estimated.at<int>(0),estimated.at<int>(1));
+            return statePt;
+        }
 
-            line(canvas, last_point, statePt, c, sz, LINE_AA);
+        void kalman_trace(Point p, int sz, Scalar c, bool drawp) {
+            if(transmatrix.empty())return;
+            transform_point(p);
 
+            if(p.x<0 or p.y<0 or p.x > canv_width or p.y > canv_height)
+                return;
+            if(last_point.x<10 or last_point.y<10
+                    or
+               last_point.x > canv_width or last_point.y > canv_height){
+                last_point = p;
+                return;
+            }
+            Point statePt = kalman_smooth(p);
+            if(drawp)
+                line(canvas, last_point, statePt, c, sz, LINE_AA);
             last_point =statePt;
         }
 

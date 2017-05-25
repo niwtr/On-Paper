@@ -16,13 +16,13 @@
 #define and &&
 #define or ||
 #define not !
-
 #define ROOT "C:/Users/L.Laddie/Documents/On-Paper/ar_mask/"
-
 #else
 #define ROOT "../"
-
 #endif // _WIN32
+
+#define elif else if
+
 
 namespace on_paper {
     class OnPaper {

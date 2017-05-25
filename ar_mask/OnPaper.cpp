@@ -9,7 +9,7 @@ void on_paper::OnPaper::main_loop(void) {
     TheVideoCapturer.open(0);
 
     TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, 800);
-    TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 600);
+    TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 900);
 
     int waitTime=1;
     if (!TheVideoCapturer.isOpened())  throw std::runtime_error("Could not open video");
@@ -44,7 +44,7 @@ void on_paper::OnPaper::main_loop(void) {
             mask = gj.mask;
             Point finger_tip=Point(0,0);
 
-            if(gt == GestureType::PRESS)
+            if(gt != GestureType::NONE)
                 finger_tip = gj.key_point();
 
             // let pa to rock.
@@ -52,13 +52,16 @@ void on_paper::OnPaper::main_loop(void) {
             {
                 pa.with_transmatrix(ac.get_transmatrix_inv());
                 if(gt == GestureType::PRESS)
-                    pa.draw_line_kalman(finger_tip, 5, Scalar(255, 255, 0));
+                    pa.kalman_trace(finger_tip, 5, Scalar(255, 255, 0), true);
+                elif(gt == GestureType::MOVE)
+                    pa.kalman_trace(finger_tip, 5, Scalar(255, 255, 0), false);
                 pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
             }
 
             //Overlay!
 
-            lm.capture(TheInputImage);
+
+            lm.capture(ac.get_processed_image());
             if(mknum>0) {
                 lm.capture(ac.get_virtual_paper_layer());
                 lm.capture(pa.get_canvas_layer());
@@ -67,6 +70,7 @@ void on_paper::OnPaper::main_loop(void) {
             lm.output(TheProcessedImage);
             if(gt!=GestureType::NONE)
                 circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 4);
+
 
             cv::imshow("ar", TheProcessedImage);
             cv::imshow("mask", mask);

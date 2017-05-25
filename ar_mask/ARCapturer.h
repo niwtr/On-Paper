@@ -120,7 +120,8 @@ namespace on_paper {
     public:
         const Mat& get_transmatrix(){return transmatrix;}
         const Mat& get_transmatrix_inv(){return transmatrix_inv;}
-        void get_input_image(Mat& m){ m.copyTo(this->TheInputImageCopy); }
+        void get_input_image(Mat& m){this->TheInputImageCopy = m;}
+        Mat get_processed_image(){ return this->TheInputImageCopy; }
         const Mat& get_image(){ return this->image;}
         Mat get_virtual_paper_layer(){return this->VirtualPaperImage;}
         unsigned long process();
