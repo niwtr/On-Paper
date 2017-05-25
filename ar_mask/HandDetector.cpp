@@ -38,7 +38,6 @@ void on_paper::HandDetector::init(int src_width)
 {
 	_prop = _tar_width * 1.0 / src_width;
 	_ctl_point = Point(0, 0);
-	_fingers.clear();
 	_defects.clear();
 	_center = Point(0, 0);
 	_r = 0;
@@ -75,15 +74,6 @@ cv::Point on_paper::HandDetector::cvt_prop(cv::Point p)
 cv::Point on_paper::HandDetector::get_fingertip()
 {
 	return cvt_prop(_ctl_point);
-}
-
-std::vector<cv::Point> on_paper::HandDetector::get_fingers()
-{
-	vector<Point> fgs;
-	for (Point fg : _fingers)
-		fgs.push_back(cvt_prop(fg));
-
-	return fgs;
 }
 
 std::vector<on_paper::Vec3p> on_paper::HandDetector::get_defects()
@@ -339,11 +329,6 @@ void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::
 			circle(dst, pt_f, 4, Scalar(100, 0, 255), 2);
 
 			_defects.push_back(Vec3p(pt_s, pt_f, pt_e));
-
-			if (find(_fingers.begin(), _fingers.end(), pt_s) == _fingers.end())
-				_fingers.push_back(pt_s);
-			if (find(_fingers.begin(), _fingers.end(), pt_e) == _fingers.end())
-				_fingers.push_back(pt_e);
 		}
 		d++;
 	}
@@ -352,9 +337,6 @@ void on_paper::HandDetector::handle_contour(cv::Mat& dst, const std::vector<cv::
 	{
 		_ctl_point = far_max;
 		circle(dst, far_max, 4, Scalar(0, 255, 0), 2);
-
-		if (_fingers.empty())
-			_fingers.push_back(far_max);
 	}
 }
 

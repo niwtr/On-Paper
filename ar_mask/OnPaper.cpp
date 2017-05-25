@@ -6,7 +6,7 @@
 
 void on_paper::OnPaper::main_loop(void) {
 
-    TheVideoCapturer.open(0);
+    TheVideoCapturer.open(1);
 
     TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, 800);
     TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 600);
@@ -48,11 +48,11 @@ void on_paper::OnPaper::main_loop(void) {
             //do something.
             ac.get_input_image(TheInputImage);
             auto mknum = ac.process();//num of markers.
-            GestureType gt = gj.get_gesture(TheInputImage);
+            struct Gesture gt = gj.get_gesture(TheInputImage);
             mask = gj.mask;
             Point finger_tip=Point(0,0);
 
-            if(gt != GestureType::NONE)
+            if(gt.type != GestureType::NONE)
                 finger_tip = gj.key_point();
 
 
@@ -61,9 +61,9 @@ void on_paper::OnPaper::main_loop(void) {
             {
                 tb.fire_event(finger_tip);
                 pa.with_transmatrix(ac.get_transmatrix_inv());
-                if(gt == GestureType::PRESS)
+                if(gt.type == GestureType::PRESS)
                     pa.kalman_trace(finger_tip, 5, line_color, true);
-                elif(gt == GestureType::MOVE)
+                elif(gt.type == GestureType::MOVE)
                     pa.kalman_trace(finger_tip, 5, line_color, false);
 
                 pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
@@ -79,7 +79,7 @@ void on_paper::OnPaper::main_loop(void) {
 
             lm.overlay();
             lm.output(TheProcessedImage);
-            if(gt!=GestureType::NONE)
+            if(gt.type!=GestureType::NONE)
                 circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 4);
 
 

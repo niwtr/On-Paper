@@ -18,14 +18,18 @@ namespace on_paper {
 		NONE
 	};
 
+	struct Gesture {
+		GestureType type = NONE;
+		vector<Point> fingers;
+	};
+
 	class GestureJudge {
 	public:
 		GestureJudge() : _hd(TAR_WIDTH) {
 
 		};
 
-		GestureType get_gesture(const Mat& src);
-		Point key_point();
+		struct Gesture get_gesture(const Mat& src);
 
 		Mat mask;		// for DEBUG
 

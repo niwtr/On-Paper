@@ -8,7 +8,7 @@
 #include "ARCapturer.h"
 #include "HandDetector.h"
 #include "Painter.h"
-#include "GesureJudge.h"
+#include "GestureJudge.h"
 #include "LayerManager.h"
 #include "ToolBox.h"
 #ifdef _WIN32

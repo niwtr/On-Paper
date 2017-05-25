@@ -36,7 +36,6 @@ namespace on_paper {
 		void train(const Mat& img, const Mat& mask);
 		void process(const Mat& src, Mat& des);
 		Point get_fingertip();
-		vector<Point> get_fingers();
 		vector<Vec3p> get_defects();
 
 	private:
@@ -69,7 +68,6 @@ namespace on_paper {
 		int _tar_width;		// 处理图像宽度
 		Point _ctl_point;	// 指尖（最长手指）
 		double _prop;		// 缩放比例
-		vector<Point> _fingers;		// 所有手指
 
 		vector<Vec3p> _defects;		// 凸缺陷
 		Point _center;		// 掌心坐标
