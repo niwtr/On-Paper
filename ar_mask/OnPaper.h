@@ -10,7 +10,7 @@
 #include "Painter.h"
 #include "GesureJudge.h"
 #include "LayerManager.h"
-
+#include "ToolBox.h"
 #ifdef _WIN32
 
 #define and &&
@@ -36,6 +36,7 @@ namespace on_paper {
         GestureJudge gj;
         LayerManager lm;
         Painter pa;
+        ToolBox tb;
 
     public:
         OnPaper(){}
@@ -44,6 +45,7 @@ namespace on_paper {
             ac.init(TheCameraParameters);
             const Mat& img = ac.get_image();
             pa.init(img.rows, img.cols);
+
         }
         void main_loop(void);
 

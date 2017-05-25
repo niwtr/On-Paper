@@ -9,7 +9,7 @@ void on_paper::OnPaper::main_loop(void) {
     TheVideoCapturer.open(0);
 
     TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, 800);
-    TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 900);
+    TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 600);
 
     int waitTime=1;
     if (!TheVideoCapturer.isOpened())  throw std::runtime_error("Could not open video");
@@ -22,12 +22,20 @@ void on_paper::OnPaper::main_loop(void) {
 
     //this->pa.init(TheInputImage.rows, TheInputImage.cols);
 
+    tb.init(TheInputImage.rows, TheInputImage.cols);
+
+
+    Scalar line_color = Scalar(255, 255, 0);
+    tb.register_callback("gored", Point(200,0), Point(400,150), [this, &line_color]{
+        line_color = Scalar(0,0,255);
+    });
+
 
     try {
 
 
         cv::namedWindow("ar");
-        cv::namedWindow("mask");
+        //cv::namedWindow("mask");
         //go!
         char key = 0;
         int index = 0;
@@ -47,25 +55,28 @@ void on_paper::OnPaper::main_loop(void) {
             if(gt != GestureType::NONE)
                 finger_tip = gj.key_point();
 
+
             // let pa to rock.
             if(mknum > 0) //detected markers!
             {
+                tb.fire_event(finger_tip);
                 pa.with_transmatrix(ac.get_transmatrix_inv());
                 if(gt == GestureType::PRESS)
-                    pa.kalman_trace(finger_tip, 5, Scalar(255, 255, 0), true);
+                    pa.kalman_trace(finger_tip, 5, line_color, true);
                 elif(gt == GestureType::MOVE)
-                    pa.kalman_trace(finger_tip, 5, Scalar(255, 255, 0), false);
+                    pa.kalman_trace(finger_tip, 5, line_color, false);
+
                 pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
             }
 
             //Overlay!
-
 
             lm.capture(ac.get_processed_image());
             if(mknum>0) {
                 lm.capture(ac.get_virtual_paper_layer());
                 lm.capture(pa.get_canvas_layer());
             }
+
             lm.overlay();
             lm.output(TheProcessedImage);
             if(gt!=GestureType::NONE)
@@ -73,7 +84,7 @@ void on_paper::OnPaper::main_loop(void) {
 
 
             cv::imshow("ar", TheProcessedImage);
-            cv::imshow("mask", mask);
+            //cv::imshow("mask", mask);
 
             key = (char)cv::waitKey(1); // wait for key to be pressed
             if(key=='s')  {
