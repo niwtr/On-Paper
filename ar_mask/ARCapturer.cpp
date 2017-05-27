@@ -25,7 +25,7 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
     MDetector.setCornerRefinementMethod(aruco::MarkerDetector::SUBPIX);
     TheInputImageCopy = Mat::zeros(100,100,CV_8UC1); //FIXME potential bug.
     TheLastMarkers=MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
-    image = imread(string(ROOT) + "x-0.png");
+    image = imread(string(IMAGEPATH) + "0001.jpg");
     //image= readPDFtoCV("../rt.pdf", 300);
     cvtColor(image, image, CV_BGR2BGRA);
     // read camera parameters if passed
@@ -89,7 +89,7 @@ void on_paper::ARCapturer::white_transparent(const cv::Mat &src, cv::Mat &dst) {
         {
             cv::Vec4b & pixel = dst.at<cv::Vec4b>(y, x);
             // if pixel is white
-            if (pixel[0] > 250 && pixel[1] > 250 && pixel[2] > 250)
+            if (pixel[0] > 180 && pixel[1] > 180 && pixel[2] > 180)
             {
                 // set alpha to zero:
                 pixel[3] = 0;
@@ -163,6 +163,14 @@ void on_paper::ARCapturer::map_markers(void) {
     this->transmatrix_inv = M_inv; //set val to M_inv.
     this->transmatrix = M; // set val to M.
     Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
+    image=pdfread(TheMarkers);
+    cvtColor(image, image, CV_BGR2BGRA);
+    this->original_image_pattern = {
+            Point2f(image.cols, image.rows),
+            Point2f(0, image.rows),
+            Point2f(0, 0),
+            Point2f(image.cols, 0)
+    };
     warpPerspective(image, transf, M, TheInputImageCopy.size(), cv::INTER_NEAREST);
     white_transparent(transf, transf);
 
@@ -217,7 +225,28 @@ void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
     }
 }
 
-
+//根据marker的值读取相对应的页
+cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker) {
+    int id,page;
+    string picname;
+    cv::Mat img;
+    for (int i=0;i<marker.size();i++)
+    {
+        id=marker[i].id;
+        page=id/MARKERNUM;
+    }
+    if(page!=cur_page)
+    {
+        picname=string(IMAGEPATH)+utils::into_name(page,ZERONUM)+".jpg";
+        //cout<<picname;
+        img=cv::imread(picname);
+        cout<<img.rows<<" " <<img.cols<<endl;
+        cur_page=page;
+    }
+    else
+        img=image;
+    return img;
+}
 
 //void on_paper::ARCapturer::overlayCanvas(const cv::Mat &canvas) {
 //    if(transmatrix.empty())//当transmatrix为空的时候可不要overlay。这是初始情况

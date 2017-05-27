@@ -6,6 +6,7 @@
 #define ARTEST_CVUTILS_H
 
 #include <opencv2/core/mat.hpp>
+#include <opencv2/imgproc.hpp>
 
 namespace on_paper{
     using namespace std;
@@ -94,6 +95,29 @@ namespace on_paper{
                     }
                 }
             }
+        }
+        static string intostr(int i)
+        {
+            string str;
+            stringstream ss;
+            ss<<i;
+            ss>>str;
+            return str;
+        }
+
+        static string into_name(int page,int Num)
+        {
+            string name;
+            int i,zeronum=Num-1;
+            i=page;
+            while(i=i/10)
+            {
+                zeronum--;
+            }
+            for(int j=0;j<zeronum;j++)
+                name+="0";
+            name=name+intostr(page);
+            return name;
         }
     };
 

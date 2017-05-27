@@ -39,6 +39,7 @@ void on_paper::OnPaper::main_loop(void) {
         // capture until press ESC or until the end of the video
 
         Mat mask ; //HandDetector的mask参数，据说目前还没啥用。
+        int page=0;
         do {
 
             TheVideoCapturer.retrieve(TheInputImage);
@@ -52,12 +53,21 @@ void on_paper::OnPaper::main_loop(void) {
             if(gt.type != GestureType::NONE)
                 finger_tips = gt.fingers;
 
+            if(page!=ac.get_page())
+            {
+                page=ac.get_page();
+                af.init(page);
+            }
 
             // let pa to rock.
             if(mknum > 0) //detected markers!
             {
                 //tb.fire_event(finger_tip);
                 pa.with_transmatrix(ac.get_transmatrix_inv());
+                //在这里可以加入对特定领域的操作
+                //传入手指的位置
+                af.transmatrix=ac.get_transmatrix_inv();
+                af.showPic(finger_tips);
                 if(gt.type == GestureType::PRESS)
                     pa.kalman_trace(finger_tips[0], 5, line_color, true);
                 elif(gt.type == GestureType::MOVE)

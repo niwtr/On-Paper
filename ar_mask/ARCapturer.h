@@ -29,8 +29,11 @@
 
 #else
 #define ROOT "../"
-
+#define IMAGEPATH "/home/xuan/下载/poem/images/"
 #endif // _WIN32
+
+#define MARKERNUM 4
+#define ZERONUM 4
 
 
 namespace on_paper {
@@ -60,8 +63,8 @@ namespace on_paper {
 
     constexpr const float a4_width = 0.210;
     constexpr const float a4_height = 0.297;
-    //constexpr const float TheMarkerSize = 0.0290;
-    constexpr const float TheMarkerSize = 0.0565;
+    constexpr const float TheMarkerSize = 0.0290;
+    //constexpr const float TheMarkerSize = 0.0565;
     constexpr const int enlarge_wheight = 640;
     constexpr const int enlarge_wwidth = 480;
 
@@ -86,6 +89,8 @@ namespace on_paper {
 
         //the image (pdf paper) to display
         Mat image;
+
+        int cur_page=0;
         /*
         const vector<Point2f> pattern_marker_source = {
                 Point2f(-1,1),
@@ -115,8 +120,8 @@ namespace on_paper {
         //上负下正，左负右正
         const vector<pair<float, float>> shifts = {
                 pair<float, float>((a4_width-TheMarkerSize)/2/a4_width, (a4_height-TheMarkerSize)/2/a4_height),
-                //pair<float, float>(0, 0.16667),
-                pair<float,float>((a4_width+TheMarkerSize)/2/a4_width, 0),
+                pair<float, float>(0, 0.16667),
+                //pair<float,float>((a4_width+TheMarkerSize)/2/a4_width, 0),
                 pair<float, float>(0, -0.16667),
                 pair<float, float>((a4_width-TheMarkerSize)/2/a4_width, -(a4_height-TheMarkerSize)/2/a4_height),
         };
@@ -139,7 +144,7 @@ namespace on_paper {
                 p.y = p.y>image.rows?image.rows:p.y;
         }
         void display_enlarged_area(Rect r);
-
+        const int& get_page(){return cur_page;};
 
     private:
 
@@ -153,6 +158,8 @@ namespace on_paper {
         cv::Mat resize(const cv::Mat &in,int width);
         void anti_shake(void);
         void fill_markers(void);
+        cv::Mat pdfread(vector<Marker>);
+
     };
 
 }

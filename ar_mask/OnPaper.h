@@ -11,6 +11,8 @@
 #include "GestureJudge.h"
 #include "LayerManager.h"
 #include "ToolBox.h"
+#include "PaperFun.h"
+
 #ifdef _WIN32
 
 #define and &&
@@ -37,7 +39,7 @@ namespace on_paper {
         LayerManager lm;
         Painter pa;
         ToolBox tb;
-
+        PaperFun af;
     public:
         OnPaper(){}
         void init(void){
