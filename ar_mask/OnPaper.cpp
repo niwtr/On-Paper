@@ -6,7 +6,7 @@
 
 void on_paper::OnPaper::main_loop(void) {
 
-    TheVideoCapturer.open(1);
+    TheVideoCapturer.open(0);
 
     TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, 800);
     TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 600);
@@ -26,9 +26,6 @@ void on_paper::OnPaper::main_loop(void) {
 
 
     Scalar line_color = Scalar(255, 255, 0);
-    tb.register_callback("gored", Point(200,0), Point(400,150), [this, &line_color]{
-        line_color = Scalar(0,0,255);
-    });
 
 
     try {
@@ -50,21 +47,39 @@ void on_paper::OnPaper::main_loop(void) {
             auto mknum = ac.process();//num of markers.
             struct Gesture gt = gj.get_gesture(TheInputImage);
             mask = gj.mask;
-            Point finger_tip=Point(0,0);
+            auto finger_tips=vector<Point>{Point(0,0)};
 
             if(gt.type != GestureType::NONE)
-                finger_tip = gj.key_point();
+                finger_tips = gt.fingers;
 
 
             // let pa to rock.
             if(mknum > 0) //detected markers!
             {
-                tb.fire_event(finger_tip);
+                //tb.fire_event(finger_tip);
                 pa.with_transmatrix(ac.get_transmatrix_inv());
                 if(gt.type == GestureType::PRESS)
-                    pa.kalman_trace(finger_tip, 5, line_color, true);
+                    pa.kalman_trace(finger_tips[0], 5, line_color, true);
                 elif(gt.type == GestureType::MOVE)
-                    pa.kalman_trace(finger_tip, 5, line_color, false);
+                    pa.kalman_trace(finger_tips[0], 5, line_color, false);
+                elif(gt.type == GestureType::ENLARGE)
+                {
+
+                    Mat _image = ac.get_image();
+                    vector<Point> vp = finger_tips;
+                    for(auto & p : vp)
+                        pa.transform_point(p);
+                    auto p1 = vp[0], p2=vp[1];
+                    ac.adjust_point(p1);
+                    ac.adjust_point(p2);
+                    int xsmaller = p1.x<p2.x? p1.x:p2.x;
+                    int ysmaller = p1.y<p2.y? p1.y:p2.y;
+                    auto rw = abs(p1.x-p2.x), rh = (int)((float)rw/640*480);
+                    if(rw > 0 or rh > 0) {
+                        Rect r = Rect(xsmaller, ysmaller, rw, rh);
+                        ac.display_enlarged_area(r);
+                    }
+                }
 
                 pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
             }
@@ -80,6 +95,7 @@ void on_paper::OnPaper::main_loop(void) {
             lm.overlay();
             lm.output(TheProcessedImage);
             if(gt.type!=GestureType::NONE)
+                for(const auto& finger_tip : finger_tips)
                 circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 4);
 
 

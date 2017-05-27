@@ -3,7 +3,7 @@
 //
 
 #include "ARCapturer.h"
-
+#include "cvutils.h"
 
 
 // must call get_input_image first!
@@ -201,6 +201,23 @@ void on_paper::ARCapturer::fill_markers(void) {
         fillPoly(TheInputImageCopy, c_corners, Scalar(180, 180, 180));
     }
 }
+
+void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
+    //do some anti-shape
+    if(utils::distance_P2P(Point(r.x, r.y), Point(last_rect.x, last_rect.y)) > 20) {
+        Mat roi = Mat();
+        if(r.x +r.width > image.cols or
+                r.y+r.height >image.rows)
+            return;
+        image(r).copyTo(roi);
+        if(roi.cols<=0)return;
+        cv::resize(roi, roi, cv::Size(enlarge_wheight, enlarge_wwidth));
+        cv::imshow("roi", roi);
+        last_rect = r;
+    }
+}
+
+
 
 //void on_paper::ARCapturer::overlayCanvas(const cv::Mat &canvas) {
 //    if(transmatrix.empty())//当transmatrix为空的时候可不要overlay。这是初始情况

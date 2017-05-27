@@ -43,6 +43,7 @@ namespace on_paper {
     using cv::Mat;
     using cv::Point2f;
     using cv::Point;
+    using cv::Rect;
     using cv::Scalar;
     //cv functions
     using cv::imread;
@@ -60,6 +61,8 @@ namespace on_paper {
     constexpr const float a4_width = 0.210;
     constexpr const float a4_height = 0.297;
     constexpr const float TheMarkerSize = 0.0290;
+    constexpr const int enlarge_wheight = 640;
+    constexpr const int enlarge_wwidth = 480;
 
 
     class ARCapturer {
@@ -72,7 +75,7 @@ namespace on_paper {
 
         vector<Marker> TheMarkers;
         vector< Marker > TheLastMarkers;
-        vector<Marker> Preserved_TheMarkers;
+        Rect last_rect;
         Mat TheInputImageCopy;
         Mat VirtualPaperImage;
         CameraParameters CamParams;
@@ -127,6 +130,13 @@ namespace on_paper {
         unsigned long process();
         void init(CameraParameters cp);
         void toggle_anti_shake(){this->perform_anti_shake = not this->perform_anti_shake;}
+        inline void adjust_point(Point& p){
+                p.x = p.x<0?0:p.x;
+                p.x = p.x>image.cols?image.cols:p.x;
+                p.y = p.y<0?0:p.y;
+                p.y = p.y>image.rows?image.rows:p.y;
+        }
+        void display_enlarged_area(Rect r);
 
 
     private:

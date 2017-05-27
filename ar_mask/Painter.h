@@ -108,6 +108,10 @@ namespace on_paper {
             p = mimage[0];
         }
 
+        void draw_rect(Rect r){
+            rectangle(canvas, r, Scalar(0,255,255), 2);
+        }
+
         Point kalman_smooth(const Point &p){
 
             //  predict, to update the internal statePre variable
@@ -144,6 +148,7 @@ namespace on_paper {
 
 
         void clear_canvas(void);
+
     };
 }
 
