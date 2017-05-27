@@ -60,7 +60,8 @@ namespace on_paper {
 
     constexpr const float a4_width = 0.210;
     constexpr const float a4_height = 0.297;
-    constexpr const float TheMarkerSize = 0.0290;
+    //constexpr const float TheMarkerSize = 0.0290;
+    constexpr const float TheMarkerSize = 0.0565;
     constexpr const int enlarge_wheight = 640;
     constexpr const int enlarge_wwidth = 480;
 
@@ -102,10 +103,10 @@ namespace on_paper {
                 Point2f(1, 1)
         };
         const vector<Point2f> pattern_paper_source ={
-                Point2f(-a4_width/TheMarkerSize,a4_height/TheMarkerSize),
-                Point2f(a4_width/TheMarkerSize,a4_height/TheMarkerSize),
+                Point2f(-a4_width/TheMarkerSize, a4_height/TheMarkerSize),
+                Point2f(a4_width/TheMarkerSize,  a4_height/TheMarkerSize),
                 Point2f(a4_width/TheMarkerSize, -a4_height/TheMarkerSize),
-                Point2f(-a4_width/TheMarkerSize, -a4_height/TheMarkerSize)
+                Point2f(-a4_width/TheMarkerSize,-a4_height/TheMarkerSize)
         };
 
         vector<vector<Point2f>> shifted_pattern_paper_source;
@@ -114,7 +115,8 @@ namespace on_paper {
         //上负下正，左负右正
         const vector<pair<float, float>> shifts = {
                 pair<float, float>((a4_width-TheMarkerSize)/2/a4_width, (a4_height-TheMarkerSize)/2/a4_height),
-                pair<float, float>(0, 0.16667),
+                //pair<float, float>(0, 0.16667),
+                pair<float,float>((a4_width+TheMarkerSize)/2/a4_width, 0),
                 pair<float, float>(0, -0.16667),
                 pair<float, float>((a4_width-TheMarkerSize)/2/a4_width, -(a4_height-TheMarkerSize)/2/a4_height),
         };

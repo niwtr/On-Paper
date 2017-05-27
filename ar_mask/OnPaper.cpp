@@ -62,6 +62,7 @@ void on_paper::OnPaper::main_loop(void) {
                     pa.kalman_trace(finger_tips[0], 5, line_color, true);
                 elif(gt.type == GestureType::MOVE)
                     pa.kalman_trace(finger_tips[0], 5, line_color, false);
+                    //an ad-hoc solution.
                 elif(gt.type == GestureType::ENLARGE)
                 {
 

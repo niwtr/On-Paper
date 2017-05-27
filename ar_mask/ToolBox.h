@@ -82,27 +82,6 @@ namespace on_paper {
             warpPerspective(original, this->screen, m, screen.size(), INTER_CUBIC);
         }
 
-
-        void example_dilette(){
-            vector<Point> corners{
-                    Point(0,0),
-                    Point(200,0),
-                    Point(200,150),
-                    Point(0,150)
-            }, corners2{
-                    Point(200,0),
-                    Point(400,0),
-                    Point(400,150),
-                    Point(200,150)
-            };
-
-            vector<vector<Point>> c_corners = {corners},
-            c_corners2={corners2};
-
-            fillPoly(screen, c_corners, Scalar(0, 255, 0));
-            fillPoly(screen, c_corners2, Scalar(0, 0, 255));
-        }
-
         //return true if an event is performed or else false.
         bool fire_event(const Point& p){
             for(auto & cell : callbacks)
