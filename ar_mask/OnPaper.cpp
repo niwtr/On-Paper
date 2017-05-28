@@ -22,13 +22,6 @@ void on_paper::OnPaper::main_loop(void) {
     if (TheCameraParameters.isValid())
         TheCameraParameters.resize(TheInputImage.size());
 
-    //this->pa.init(TheInputImage.rows, TheInputImage.cols);
-
-    tb.init(TheInputImage.rows, TheInputImage.cols);
-
-
-    Scalar line_color = Scalar(255, 255, 0);
-
     long last_gesture_time = utils::curtime_msec();
     auto last_gesture = GestureType::PRESS;
 
@@ -72,7 +65,10 @@ void on_paper::OnPaper::main_loop(void) {
                 //在这里可以加入对特定领域的操作
                 //传入手指的位置
                 af.transmatrix=ac.get_transmatrix_inv();
-                af.showPic(finger_tips);
+
+                Mat _pic;Point p;
+                af.check_inbound(finger_tips, p);
+
                 if(gt.type == GestureType::PRESS) {
                      auto curtime = utils::curtime_msec();
                     if(last_gesture == GestureType::MOVE or last_gesture == GestureType::ENLARGE) {
@@ -84,23 +80,23 @@ void on_paper::OnPaper::main_loop(void) {
                             //进行三十次卡尔曼追踪使得划线的光标回归手指。
                             //注意30次只是经验。
                             for(int i = 0;i<30;i++)
-                                pa.kalman_trace(finger_tips[0], 5, line_color, false);
+                                pa.kalman_trace(finger_tips[0], false);
                             last_gesture_time = curtime;
                             last_gesture = PRESS;
-                            pa.kalman_trace(finger_tips[0], 5, line_color, true); //trace and draw
+                            pa.kalman_trace(finger_tips[0], true); //trace and draw
                         }
 
                     } else {
                         last_gesture_time = curtime;
                         last_gesture = PRESS;
-                        pa.kalman_trace(finger_tips[0], 5, line_color, true);
+                        pa.kalman_trace(finger_tips[0],true);
                     }
 
                 }
                 elif(gt.type == GestureType::MOVE)
                     //TODO 哪一个跟原来的点相近，我们才应该对哪个点滤波。
                 {
-                    pa.kalman_trace(finger_tips[0], 5, line_color, false);
+                    pa.kalman_trace(finger_tips[0], false);
                     last_gesture = GestureType::MOVE;
                     last_gesture_time=utils::curtime_msec();
                 }
@@ -109,7 +105,7 @@ void on_paper::OnPaper::main_loop(void) {
                 {
                     last_gesture = GestureType::ENLARGE;
                     last_gesture_time=utils::curtime_msec();
-                    pa.kalman_trace(finger_tips[0], 5, line_color, false);
+                    pa.kalman_trace(finger_tips[0], false);
                     Mat _image = ac.get_image();
                     vector<Point> vp = finger_tips;
                     for(auto & p : vp)

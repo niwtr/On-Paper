@@ -55,16 +55,24 @@ namespace on_paper{
 
 
         static void overlay_BGR(const Mat& background, const Mat& foreground, Mat& output) {
-            //if(transmatrix.empty())//当transmatrix为空的时候可不要overlay。这是初始情况
-            //    //TODO 尽量避免初始情况。使用更优雅的初始化函数。
-            //    return;
-            ////TODO 尽量减少cvtColor?
-            //cvtColor(TheInputImageCopy, TheInputImageCopy, CV_BGRA2BGR);
-            //Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC3);
-            //warpPerspective(canvas, transf, this->transmatrix, TheInputImageCopy.size(), cv::INTER_NEAREST);
             cv::addWeighted(foreground, 1, background, 1, 0, output);
         }
 
+        static void white_transparent(const Mat & src, Mat& dst){
+            cv::cvtColor(src, dst, CV_BGR2BGRA);
+            // find all white pixel and set alpha value to zero:
+            for (int y = 0; y < dst.rows; ++y)
+                for (int x = 0; x < dst.cols; ++x)
+                {
+                    cv::Vec4b & pixel = dst.at<cv::Vec4b>(y, x);
+                    // if pixel is white
+                    if (pixel[0] > 180 && pixel[1] > 180 && pixel[2] > 180)
+                    {
+                        // set alpha to zero:
+                        pixel[3] = 0;
+                    }
+                }
+        }
 
         static void overlay_BGRA(const Mat &background, const Mat &foreground,
                      Mat &output, Point2i location) {

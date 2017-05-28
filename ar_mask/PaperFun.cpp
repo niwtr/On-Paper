@@ -5,6 +5,7 @@
 #include "PaperFun.h"
 
 void on_paper::PaperFun::init(int page) {
+    pic_path = "";
     string json_name,json_str="",str;
     json_name=CONFIGPATH+utils::into_name(page,ZERONUM)+".json";
     //cout<<json_name<<endl;
@@ -37,8 +38,8 @@ void on_paper::PaperFun::transform_point(Point& p){
     p = mimage[0];
 }
 
-void on_paper::PaperFun::showPic(vector<Point> figPs, Point & figP) {
-    string pic_path="";
+void on_paper::PaperFun::check_inbound(vector<Point> figPs, Point &figP) {
+
     bool ishow=false;
     figP=Point(0,0);
     if(!j.empty())
@@ -51,25 +52,17 @@ void on_paper::PaperFun::showPic(vector<Point> figPs, Point & figP) {
             {
                 if(judgeIn(figP,iter->tl,iter->br))
                 {
-                    if(pic_path!=iter->data)
-                    {
-                        pic_path=iter->data;
-                        picture=imread(pic_path);
+                    string function = iter->function;
+                    iter->finger = figP;
+                    //take that elegance.
+                    call_paper_fun(function, *iter);
 
-
-                        Mat resizedPic;
-                        resize(picture,resizedPic,cv::Size(1000,(float)1000/picture.cols*picture.rows));
-                        picture=resizedPic;
-                        ishow= true;
-                        break;
-                    }
+                    break;
                 }
             }
         }
     }
-    if(ishow==false)
-        figP=Point(0,0);
-    return;
+
 }
 
 void on_paper::PaperFun::parseJson() {
@@ -93,5 +86,35 @@ void on_paper::PaperFun::parseJson() {
 
 bool on_paper::PaperFun::judgeIn(cv::Point p, cv::Point tl, cv::Point br) {
     return p.x > tl.x and p.x < br.x and p.y < br.y and p.y > tl.y;
+}
+
+void on_paper::PaperFun::call_paper_fun(string function_name, Info arg) {
+    auto bind = this->_fnmap.find(function_name);
+    if(bind != this->_fnmap.end()) //gotcha!!
+    {
+        //let's rock!
+        bind->second(arg); //call the paper function.
+    } else {
+        cout<<"No such binding!"<<endl; //an ad-hoc debugger.
+    }
+}
+
+void on_paper::PaperFun::register_callbacks(void) {
+    this->_fnmap.insert(make_pair<string, functor>(
+            "addpicture",
+            [&](Info i){
+                if(pic_path!=i.data)
+                {
+                    pic_path=i.data;
+                    picture=imread(pic_path);
+                    Mat resizedPic;
+                    resize(picture,resizedPic,cv::Size(1000,(float)1000/picture.cols*picture.rows));
+                    picture=resizedPic;
+                }
+                pa_ptr->paste_temp_pic(picture, i.finger);
+            }
+    ));
+
+
 }
 

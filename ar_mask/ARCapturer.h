@@ -155,7 +155,7 @@ namespace on_paper {
         template<typename vecpf>
         float euclid_dist(const vecpf& v1, const vecpf& v2);
 
-        void white_transparent(const Mat & src, Mat& dst);
+
 
         vector<Point2f>vector_avg2 (const vector<Point2f>& src1, const vector<Point2f>& src2);
         void map_markers(void);//returns marker num.

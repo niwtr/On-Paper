@@ -11,7 +11,7 @@ unsigned long on_paper::ARCapturer::process() {
     // copy image
     // Detection of markers in the image passed
     TheMarkers= MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
-    fill_markers();
+    //fill_markers();
     if(perform_anti_shake)
         anti_shake();
     map_markers();
@@ -81,22 +81,6 @@ float on_paper::ARCapturer::euclid_dist(const vecpf &v1, const vecpf &v2) {
 }
 #undef S2
 
-
-void on_paper::ARCapturer::white_transparent(const cv::Mat &src, cv::Mat &dst) {
-    cv::cvtColor(src, dst, CV_BGR2BGRA);
-    // find all white pixel and set alpha value to zero:
-    for (int y = 0; y < dst.rows; ++y)
-        for (int x = 0; x < dst.cols; ++x)
-        {
-            cv::Vec4b & pixel = dst.at<cv::Vec4b>(y, x);
-            // if pixel is white
-            if (pixel[0] > 180 && pixel[1] > 180 && pixel[2] > 180)
-            {
-                // set alpha to zero:
-                pixel[3] = 0;
-            }
-        }
-}
 
 cv::Mat on_paper::ARCapturer::resize(const cv::Mat &in, int width)
 {
@@ -170,7 +154,7 @@ void on_paper::ARCapturer::map_markers(void) {
             Point2f(image.cols, 0)
     };
     warpPerspective(image, transf, M, TheInputImageCopy.size(), cv::INTER_NEAREST);
-    white_transparent(transf, transf);
+    utils::white_transparent(transf, transf);
 
     VirtualPaperImage = transf;
 
