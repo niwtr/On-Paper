@@ -11,7 +11,7 @@ unsigned long on_paper::ARCapturer::process() {
     // copy image
     // Detection of markers in the image passed
     TheMarkers= MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
-    //fill_markers();
+    fill_markers();
     if(perform_anti_shake)
         anti_shake();
     map_markers();
@@ -25,7 +25,7 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
     MDetector.setCornerRefinementMethod(aruco::MarkerDetector::SUBPIX);
     TheInputImageCopy = Mat::zeros(100,100,CV_8UC1); //FIXME potential bug.
     TheLastMarkers=MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
-    image = imread(string(IMAGEPATH) + "0001.jpg");
+    image = imread(string(IMAGEPATH) + "prince-"+"0.png");
 
     //image= readPDFtoCV("../rt.pdf", 300);
     cvtColor(image, image, CV_BGR2BGRA);
@@ -146,7 +146,8 @@ void on_paper::ARCapturer::map_markers(void) {
     this->transmatrix = M; // set val to M.
     Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
     image=pdfread(TheMarkers);
-    cvtColor(image, image, CV_BGR2BGRA);
+
+
     this->original_image_pattern = {
             Point2f(image.cols, image.rows),
             Point2f(0, image.rows),
@@ -154,9 +155,11 @@ void on_paper::ARCapturer::map_markers(void) {
             Point2f(image.cols, 0)
     };
     warpPerspective(image, transf, M, TheInputImageCopy.size(), cv::INTER_NEAREST);
-    utils::white_transparent(transf, transf);
+    if(need_white_transparent)
+        utils::white_transparent(transf, transf);
 
     VirtualPaperImage = transf;
+
 
 }
 
@@ -186,7 +189,8 @@ void on_paper::ARCapturer::fill_markers(void) {
     for(auto& lamaker : TheMarkers) {//fill the marker with white.
         vector<Point> corners(lamaker.begin(), lamaker.end());
         vector<vector<Point>> c_corners = {corners};
-        fillPoly(TheInputImageCopy, c_corners, Scalar(180, 180, 180));
+        //polylines(TheInputImageCopy, c_corners, true, Scalar(0,0,255), 7, LINE_AA);
+        //fillPoly(TheInputImageCopy, c_corners, Scalar(180, 180, 180));
     }
 }
 
@@ -213,19 +217,34 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker) {
     for (int i=0;i<marker.size();i++)
     {
         id=marker[i].id;
-        page=id/MARKERNUM;
+        if(id > special_page_start)//special
+        {
+            page = id;
+        } else {
+            page = id / MARKERNUM;
+        }
     }
+
     if(page!=cur_page)
     {
-        picname=string(IMAGEPATH)+utils::into_name(page,ZERONUM)+".jpg";
-        //cout<<picname;
-        img=cv::imread(picname);
+        picname=string(IMAGEPATH)+"prince-"+utils::into_name(page,ZERONUM)+".png";
+        cout<<picname<<endl;
+        img=cv::imread(picname, IMREAD_UNCHANGED);
+        cout<<img.channels()<<endl;
+        if(img.channels() == 4) {
+            need_white_transparent = false;
+            //cvtColor(img, img, CV_BGRA2RGBA);
+        } else
+            need_white_transparent = true;
         cout<<img.rows<<" " <<img.cols<<endl;
         cur_page=page;
         pa_ptr->init_canvas_of_page(cur_page);
     }
     else
         img=image;
+
+
+
     return img;
 }
 

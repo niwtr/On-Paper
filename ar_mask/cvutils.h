@@ -7,6 +7,7 @@
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <sys/time.h>
 namespace on_paper{
     using namespace std;
@@ -66,6 +67,9 @@ namespace on_paper{
                 {
                     cv::Vec4b & pixel = dst.at<cv::Vec4b>(y, x);
                     // if pixel is white
+                    if((abs(pixel[0]-pixel[1])+abs(pixel[1]-pixel[2])+abs(pixel[2]-pixel[0]))
+                            > 50)
+                        continue;
                     if (pixel[0] > 180 && pixel[1] > 180 && pixel[2] > 180)
                     {
                         // set alpha to zero:

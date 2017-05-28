@@ -15,11 +15,10 @@
 #include <vector>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-
-#define CONFIGPATH "/home/xuan/下载/poem/config/"
 #include <functional>
 #include <unordered_map>
-#define ZERONUM 4
+#define CONFIGPATH "/home/heranort/Dev/prince/config/"
+#define ZERONUM 1
 
 namespace on_paper
 {

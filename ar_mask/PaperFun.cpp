@@ -10,6 +10,10 @@ void on_paper::PaperFun::init(int page) {
     json_name=CONFIGPATH+utils::into_name(page,ZERONUM)+".json";
     //cout<<json_name<<endl;
     ifstream json_file(json_name);
+
+    //clear
+    json_parse.clear();
+    j.clear();
     if(!json_file.is_open())
     {
         cout<<"json file open failed"<<endl;
@@ -39,8 +43,6 @@ void on_paper::PaperFun::transform_point(Point& p){
 }
 
 void on_paper::PaperFun::check_inbound(vector<Point> figPs, Point &figP) {
-
-    bool ishow=false;
     figP=Point(0,0);
     if(!j.empty())
     {
@@ -112,6 +114,19 @@ void on_paper::PaperFun::register_callbacks(void) {
                     picture=resizedPic;
                 }
                 pa_ptr->paste_temp_pic(picture, i.finger);
+            }
+    ));
+    this->_fnmap.insert(make_pair<string, functor>(
+            "setcolor",
+            [&](Info i){
+                string _b, _g, _r;
+                int b,g,r;
+                stringstream ss(i.data);
+                getline(ss, _b, ',');
+                getline(ss,_g,',');
+                getline(ss,_r,',');
+                b = atoi(_b.data());g=atoi(_g.data());r=atoi(_r.data());
+                pa_ptr->set_color(Scalar(b,g,r));
             }
     ));
 

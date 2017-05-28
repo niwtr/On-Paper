@@ -10,8 +10,8 @@ void on_paper::OnPaper::main_loop(void) {
 
     TheVideoCapturer.open(0);
 
-    TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, 800);
-    TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 600);
+    TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, 1024);
+    TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 768);
 
     int waitTime=1;
     if (!TheVideoCapturer.isOpened())  throw std::runtime_error("Could not open video");
@@ -25,7 +25,7 @@ void on_paper::OnPaper::main_loop(void) {
     long last_gesture_time = utils::curtime_msec();
     auto last_gesture = GestureType::PRESS;
 
-
+    Mat m = imread("/home/heranort/Dev/prince/images/prince-32.png");
     try {
 
 
@@ -44,6 +44,7 @@ void on_paper::OnPaper::main_loop(void) {
             //do something.
             ac.input_image(TheInputImage);
             auto mknum = ac.process();//num of markers.
+
             struct Gesture gt = gj.get_gesture(TheInputImage);
             mask = gj.mask;
             auto finger_tips=vector<Point>{Point(0,0)};
@@ -55,6 +56,7 @@ void on_paper::OnPaper::main_loop(void) {
             {
                 page=ac.get_page();
                 af.init(page);
+
             }
 
             // let pa to rock.
@@ -139,7 +141,6 @@ void on_paper::OnPaper::main_loop(void) {
             if(gt.type!=GestureType::NONE)
                 for(const auto& finger_tip : finger_tips)
                 circle(TheProcessedImage, finger_tip, 4, Scalar(0, 0, 255), 4);
-
 
             cv::imshow("ar", TheProcessedImage);
             //cv::imshow("mask", mask);
