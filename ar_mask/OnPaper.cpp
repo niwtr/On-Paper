@@ -3,6 +3,8 @@
 //
 
 #include "OnPaper.h"
+#include <ctime>
+
 
 void on_paper::OnPaper::main_loop(void) {
 
@@ -26,6 +28,9 @@ void on_paper::OnPaper::main_loop(void) {
 
 
     Scalar line_color = Scalar(255, 255, 0);
+
+    long last_gesture_time = utils::curtime_msec();
+    auto last_gesture = GestureType::PRESS;
 
 
     try {
@@ -68,14 +73,42 @@ void on_paper::OnPaper::main_loop(void) {
                 //传入手指的位置
                 af.transmatrix=ac.get_transmatrix_inv();
                 af.showPic(finger_tips);
-                if(gt.type == GestureType::PRESS)
-                    pa.kalman_trace(finger_tips[0], 5, line_color, true);
+                if(gt.type == GestureType::PRESS) {
+                     auto curtime = utils::curtime_msec();
+                    if(last_gesture == GestureType::MOVE or last_gesture == GestureType::ENLARGE) {
+                        //之前不是press手势，说明这是从其他手势恢复到划线手势。这时，需要等待400毫秒
+                        //等待400毫秒是为了让用户有足够的时间准备好划线。
+                        //因为用户手势改变的动作是会占用时间的。
+                        if(curtime - last_gesture_time > 400)//timeout for 400msec
+                        {
+                            //进行三十次卡尔曼追踪使得划线的光标回归手指。
+                            //注意30次只是经验。
+                            for(int i = 0;i<30;i++)
+                                pa.kalman_trace(finger_tips[0], 5, line_color, false);
+                            last_gesture_time = curtime;
+                            last_gesture = PRESS;
+                            pa.kalman_trace(finger_tips[0], 5, line_color, true); //trace and draw
+                        }
+
+                    } else {
+                        last_gesture_time = curtime;
+                        last_gesture = PRESS;
+                        pa.kalman_trace(finger_tips[0], 5, line_color, true);
+                    }
+
+                }
                 elif(gt.type == GestureType::MOVE)
                     //TODO 哪一个跟原来的点相近，我们才应该对哪个点滤波。
+                {
                     pa.kalman_trace(finger_tips[0], 5, line_color, false);
+                    last_gesture = GestureType::MOVE;
+                    last_gesture_time=utils::curtime_msec();
+                }
                     //an ad-hoc solution.
                 elif(gt.type == GestureType::ENLARGE)
                 {
+                    last_gesture = GestureType::ENLARGE;
+                    last_gesture_time=utils::curtime_msec();
                     pa.kalman_trace(finger_tips[0], 5, line_color, false);
                     Mat _image = ac.get_image();
                     vector<Point> vp = finger_tips;
@@ -90,7 +123,7 @@ void on_paper::OnPaper::main_loop(void) {
                     if(rw > 0 or rh > 0) {
                         Rect r = Rect(xsmaller, ysmaller, rw, rh);
                         pa.draw_enlarged_rect(r);
-                        ac.display_enlarged_area(r);
+                       // ac.display_enlarged_area(r);
                     }
                 }
 

@@ -7,13 +7,20 @@
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc.hpp>
-
+#include <sys/time.h>
 namespace on_paper{
     using namespace std;
     using namespace cv;
     class utils {
     public:
         constexpr const static float PI = 3.14;
+
+        static long curtime_msec(void){
+            struct timeval tv;
+            gettimeofday(&tv,NULL);
+            return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+        };
+
 
         static void drawLine(cv::Mat &image, double theta, double rho, cv::Scalar color){
                 if (theta < PI / 4. || theta > 3.*PI / 4.)// ~vertical line
