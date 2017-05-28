@@ -67,7 +67,14 @@ void on_paper::OnPaper::main_loop(void) {
                 //在这里可以加入对特定领域的操作
                 //传入手指的位置
                 af.transmatrix=ac.get_transmatrix_inv();
-                af.showPic(finger_tips);
+                Mat _pic;
+                Point p;
+                af.showPic(finger_tips,p);
+                if(p!=Point(0,0))
+                {
+                    _pic=af.get_pic();
+                    pa.pastePic(_pic,p);
+                }
                 if(gt.type == GestureType::PRESS)
                     pa.kalman_trace(finger_tips[0], 5, line_color, true);
                 elif(gt.type == GestureType::MOVE)
@@ -93,7 +100,6 @@ void on_paper::OnPaper::main_loop(void) {
                         ac.display_enlarged_area(r);
                     }
                 }
-
                 pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
             }
 
@@ -127,11 +133,9 @@ void on_paper::OnPaper::main_loop(void) {
         } while (key != 27 && (TheVideoCapturer.grab() ));
 
     } catch (std::exception &ex)
-
     {
         cout << "Exception :" << ex.what() << endl;
     }
-
 
 }
 

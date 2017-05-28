@@ -25,7 +25,7 @@ void on_paper::PaperFun::init(int page) {
     j=json::parse(json_str);
     parseJson();
 
-    appended_fun_layer.zeros(800,600,CV_8UC3);
+   // appended_fun_layer.zeros(800,600,CV_8UC3);
     return;
 }
 
@@ -37,36 +37,39 @@ void on_paper::PaperFun::transform_point(Point& p){
     p = mimage[0];
 }
 
-void on_paper::PaperFun::showPic(vector<Point> figPs) {
+void on_paper::PaperFun::showPic(vector<Point> figPs, Point & figP) {
     string pic_path="";
-    Point figP;
-    for(vector<Point>::iterator it=figPs.begin();it!=figPs.end();it++)
+    bool ishow=false;
+    figP=Point(0,0);
+    if(!j.empty())
     {
-        figP=*it;
-        transform_point(figP);
-        for(vector<Info>::iterator iter=json_parse.begin();iter!=json_parse.end();iter++)
+        for(vector<Point>::iterator it=figPs.begin();it!=figPs.end();it++)
         {
-            if(figP.x > iter->tl.x and figP.x < iter->br.x and figP.y < iter->br.y and figP.y > iter->tl.y )
+            figP=*it;
+            transform_point(figP);
+            for(vector<Info>::iterator iter=json_parse.begin();iter!=json_parse.end();iter++)
             {
-                if(pic_path!=iter->pic_path)
+                if(judgeIn(figP,iter->tl,iter->br))
                 {
-                    pic_path=iter->pic_path;
-                    picture=imread(pic_path);
+                    if(pic_path!=iter->data)
+                    {
+                        pic_path=iter->data;
+                        picture=imread(pic_path);
 
-                    //cout<<pic_path<<endl;
 
-                    Mat resizedPic;
-                    resize(picture,resizedPic,cv::Size(200,(float)200/picture.cols*picture.rows));
-                    picture=resizedPic;
-
-                    cv::imshow("pic",picture);
-
+                        Mat resizedPic;
+                        resize(picture,resizedPic,cv::Size(1000,(float)1000/picture.cols*picture.rows));
+                        picture=resizedPic;
+                        ishow= true;
+                        break;
+                    }
                 }
-
             }
         }
-
     }
+    if(ishow==false)
+        figP=Point(0,0);
+    return;
 }
 
 void on_paper::PaperFun::parseJson() {
@@ -76,7 +79,8 @@ void on_paper::PaperFun::parseJson() {
     {
         info.tl=Point(it.value().at("tlx").get<int>(),it.value().at("tly").get<int>());
         info.br=Point(it.value().at("brx").get<int>(),it.value().at("bry").get<int>());
-        info.pic_path=it.value().at("pic").get<std::string>();
+        info.function=it.value().at("fun").get<std::string>();
+        info.data=it.value().at("addition").get<std::string>();
         json_parse.push_back(info);
     }
     /*
@@ -86,3 +90,8 @@ void on_paper::PaperFun::parseJson() {
     }
     */
 }
+
+bool on_paper::PaperFun::judgeIn(cv::Point p, cv::Point tl, cv::Point br) {
+    return p.x > tl.x and p.x < br.x and p.y < br.y and p.y > tl.y;
+}
+
