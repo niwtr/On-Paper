@@ -47,7 +47,7 @@ namespace on_paper {
             ac.init(TheCameraParameters);
             const Mat& img = ac.get_image();
             pa.init(img.rows, img.cols);
-
+            ac.capture_Painter(&pa);
         }
         void main_loop(void);
 

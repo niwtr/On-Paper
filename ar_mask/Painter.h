@@ -14,6 +14,7 @@
 #include <vector>
 #include <opencv2/highgui.hpp>
 #include "cvutils.h"
+#include <map>
 
 #define EUCLID_DIST(A,B) (sqrt(fabs(pow(A.x - B.x, 2) + pow(A.y - B.y, 2))))
 
@@ -28,10 +29,20 @@
 namespace on_paper {
     using namespace cv;
     using std::vector;
+    using std::map;
 
     class Painter {
     private:
+        //canvas是当前工作中的画布。
+        //canvas_container是画布的容器。
+        //canvas_layer是映射到真实世界的canvas
+        //temp_canvas是单帧canvas
+        //temp_canvas_layer是单帧canvas的投射。
+        Mat __empty;
+        Mat temp_canvas;
+        Mat temp_canvas_layer;
         Mat canvas;
+        map<int, Mat> canvas_container;
         Mat canvas_layer;
         int canv_height;
         int canv_width;
@@ -45,8 +56,14 @@ namespace on_paper {
     public:
 
         Mat& get_canvas_layer() { return this->canvas_layer; }
-
+        Mat get_temp_canvas_layer(){
+            auto _layer = this->temp_canvas_layer;
+            this->temp_canvas = __empty.clone();
+            //this->temp_canvas_layer = __empty.clone();
+            return _layer;
+        }
         Painter(){}
+
 
         // M: inverted, from real to image.
         void with_transmatrix(const Mat &M){this->transmatrix=M;}
@@ -55,6 +72,7 @@ namespace on_paper {
             if(M.empty())
                 return;
             warpPerspective(canvas, canvas_layer, M, sz, INTER_NEAREST);
+            warpPerspective(temp_canvas, temp_canvas_layer, M, sz, INTER_NEAREST);
         }
         void clear_last(){
             this->last_point = Point(0,0);
@@ -84,9 +102,22 @@ namespace on_paper {
             this->canv_width = cols;
             this->canvas = Mat::zeros(rows, cols, CV_8UC3);
             /* init kalman filter */
+            this->__empty = Mat::zeros(rows, cols, CV_8UC3);
+            this->temp_canvas = __empty.clone();
             initKF();
-
         }
+
+        void init_canvas_of_page(int npage){
+            auto it = canvas_container.find(npage);
+            if(it == canvas_container.end()) {//init new
+                Mat newcanvas = Mat::zeros(canv_height, canv_width, CV_8UC3);
+                this->canvas = newcanvas;
+                this->canvas_container.insert(make_pair<int, Mat>(move(npage), move(newcanvas)));
+            } else
+                this->canvas = it->second;
+        }
+
+
         void draw_line_simple(Point p, Scalar c){
             if(p.x<10 or p.y<10 )
                 return;
@@ -108,8 +139,8 @@ namespace on_paper {
             p = mimage[0];
         }
 
-        void draw_rect(Rect r){
-            rectangle(canvas, r, Scalar(0,255,255), 2);
+        void draw_enlarged_rect(Rect r){
+            rectangle(temp_canvas, r, Scalar(0,255,255), 7);
         }
 
         Point kalman_smooth(const Point &p){

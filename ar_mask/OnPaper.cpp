@@ -44,7 +44,7 @@ void on_paper::OnPaper::main_loop(void) {
 
             TheVideoCapturer.retrieve(TheInputImage);
             //do something.
-            ac.get_input_image(TheInputImage);
+            ac.input_image(TheInputImage);
             auto mknum = ac.process();//num of markers.
             struct Gesture gt = gj.get_gesture(TheInputImage);
             mask = gj.mask;
@@ -71,11 +71,12 @@ void on_paper::OnPaper::main_loop(void) {
                 if(gt.type == GestureType::PRESS)
                     pa.kalman_trace(finger_tips[0], 5, line_color, true);
                 elif(gt.type == GestureType::MOVE)
+                    //TODO 哪一个跟原来的点相近，我们才应该对哪个点滤波。
                     pa.kalman_trace(finger_tips[0], 5, line_color, false);
                     //an ad-hoc solution.
                 elif(gt.type == GestureType::ENLARGE)
                 {
-
+                    pa.kalman_trace(finger_tips[0], 5, line_color, false);
                     Mat _image = ac.get_image();
                     vector<Point> vp = finger_tips;
                     for(auto & p : vp)
@@ -88,6 +89,7 @@ void on_paper::OnPaper::main_loop(void) {
                     auto rw = abs(p1.x-p2.x), rh = (int)((float)rw/640*480);
                     if(rw > 0 or rh > 0) {
                         Rect r = Rect(xsmaller, ysmaller, rw, rh);
+                        pa.draw_enlarged_rect(r);
                         ac.display_enlarged_area(r);
                     }
                 }
@@ -101,6 +103,7 @@ void on_paper::OnPaper::main_loop(void) {
             if(mknum>0) {
                 lm.capture(ac.get_virtual_paper_layer());
                 lm.capture(pa.get_canvas_layer());
+                lm.capture(pa.get_temp_canvas_layer());
             }
 
             lm.overlay();

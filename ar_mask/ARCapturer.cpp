@@ -6,7 +6,7 @@
 #include "cvutils.h"
 
 
-// must call get_input_image first!
+// must call input_image first!
 unsigned long on_paper::ARCapturer::process() {
     // copy image
     // Detection of markers in the image passed
@@ -26,6 +26,7 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
     TheInputImageCopy = Mat::zeros(100,100,CV_8UC1); //FIXME potential bug.
     TheLastMarkers=MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
     image = imread(string(IMAGEPATH) + "0001.jpg");
+
     //image= readPDFtoCV("../rt.pdf", 300);
     cvtColor(image, image, CV_BGR2BGRA);
     // read camera parameters if passed
@@ -114,7 +115,9 @@ cv::Mat on_paper::ARCapturer::resize(const cv::Mat &in, int width)
  * 遵循以下策略：
  * 1. 如果没有中间部分的marker，使用两个角上的任意一个marker。
  * 2. 如果存在中间部分的marker，使用两个marker映射结果的平均值。(TODO 加上两个角上的marker的干预)
+ * //TODO 2017-5-27 迫使该方法退役。
  */
+
 void on_paper::ARCapturer::map_markers(void) {
 
     bool exists_in_middle = false;
@@ -145,11 +148,6 @@ void on_paper::ARCapturer::map_markers(void) {
 
         vector<Point2f> __virtual_paper;
         perspectiveTransform(shifted_pattern_paper_source[lamaker.id%4], __virtual_paper, M0);
-
-        //circle(TheInputImageCopy, mcenter, 10, Scalar(0,255,0),10);
-        //for(int ii=0;ii< 4;ii++)
-//                    circle(TheInputImageCopy, lamaker[ii], 10, Scalar(0, ii*50, 0), 10);
-
         if(virtual_paper.size()==0)
             virtual_paper=__virtual_paper;
         else
@@ -176,8 +174,6 @@ void on_paper::ARCapturer::map_markers(void) {
 
     VirtualPaperImage = transf;
 
-    //Mat output;
-    //overlayImage(TheInputImageCopy, transf, TheInputImageCopy, Point(0, 0));
 }
 
 vector<cv::Point2f> on_paper::ARCapturer::vector_avg2(const vector<cv::Point2f> &src1, const vector<cv::Point2f> &src2)
@@ -242,23 +238,13 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker) {
         img=cv::imread(picname);
         cout<<img.rows<<" " <<img.cols<<endl;
         cur_page=page;
+        pa_ptr->init_canvas_of_page(cur_page);
     }
     else
         img=image;
     return img;
 }
 
-//void on_paper::ARCapturer::overlayCanvas(const cv::Mat &canvas) {
-//    if(transmatrix.empty())//当transmatrix为空的时候可不要overlay。这是初始情况
-//        //TODO 尽量避免初始情况。使用更优雅的初始化函数。
-//        return;
-//    //TODO 尽量减少cvtColor?
-//    cvtColor(TheInputImageCopy, TheInputImageCopy, CV_BGRA2BGR);
-//    Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC3);
-//    warpPerspective(canvas, transf, this->transmatrix, TheInputImageCopy.size(), cv::INTER_NEAREST);
-//    cv::addWeighted(transf, 1, TheInputImageCopy, 1, 0, TheInputImageCopy);
-//
-//}
 
 #undef distance
 
