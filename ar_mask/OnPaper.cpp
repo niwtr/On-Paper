@@ -126,7 +126,6 @@ void on_paper::OnPaper::main_loop(void) {
                        // ac.display_enlarged_area(r);
                     }
                 }
-
                 pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
             }
 
@@ -160,11 +159,9 @@ void on_paper::OnPaper::main_loop(void) {
         } while (key != 27 && (TheVideoCapturer.grab() ));
 
     } catch (std::exception &ex)
-
     {
         cout << "Exception :" << ex.what() << endl;
     }
-
 
 }
 

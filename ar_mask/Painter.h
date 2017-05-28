@@ -180,6 +180,42 @@ namespace on_paper {
 
         void clear_canvas(void);
 
+        void pastePic(Mat pic, Point center)
+        {
+            vector<Point2f> src,dst;
+            Point2f tl,tr,bl,br;
+            //src pic
+            tl=Point2f(0,0);
+            tr=Point2f(pic.cols,0);
+            bl=Point2f(0,pic.rows);
+            br=Point2f(pic.cols,pic.rows);
+            src.push_back(tl);
+            src.push_back(tr);
+            src.push_back(bl);
+            src.push_back(br);
+            //dst pic
+            tl=Point2f(center.x-pic.cols/2,center.y-pic.rows/2);
+            tr=Point2f(center.x+pic.cols/2,center.y-pic.rows/2);
+            bl=Point2f(center.x-pic.cols/2,center.y+pic.rows/2);
+            br=Point2f(center.x+pic.cols/2,center.y+pic.rows/2);
+            dst.push_back(tl);
+            dst.push_back(tr);
+            dst.push_back(bl);
+            dst.push_back(br);
+            //mat transfrom
+            Mat transf;
+            transf=getPerspectiveTransform(src,dst);
+
+            vector<Point2f> picArray,picTrans;
+            for(int i=0;i<pic.rows;i++)
+            {
+                for(int j=0;j<pic.cols;j++)
+                {
+                    picArray.push_back(Point2f(i,j));
+                }
+            }
+            warpPerspective(pic,temp_canvas,transf,temp_canvas.size(),INTER_NEAREST);
+        }
     };
 }
 

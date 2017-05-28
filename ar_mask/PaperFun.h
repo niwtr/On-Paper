@@ -26,23 +26,26 @@ namespace on_paper
     class Info{
     public:
         Point tl,br;
-        string pic_path;
+        string function;
+        string data;
     };
     class PaperFun {
     public:
-        Mat appended_fun_layer;
-        Mat picture;
-        json j;
+        //Mat appended_fun_layer;
         Mat transmatrix;
     private:
         vector<Info> json_parse;
+        Mat picture;
+        json j;
     public:
         void init(int page);
-        void showPic(vector<Point> figPs);
-        Mat get_pic_layer(){return this->appended_fun_layer;};
+        void showPic(vector<Point> figPs,Point &);
+        Mat get_pic(){return this->picture;};
     private:
         void parseJson();
         void transform_point(Point& p);
+        bool judgeIn(Point p,Point tl,Point br);
+        //Mat pastePic(Mat pic,Point br);
     };
 }
 

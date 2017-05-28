@@ -64,8 +64,8 @@ namespace on_paper {
 
     constexpr const float a4_width = 0.210;
     constexpr const float a4_height = 0.297;
-    //constexpr const float TheMarkerSize = 0.0290;
-    constexpr const float TheMarkerSize = 0.0565;
+    constexpr const float TheMarkerSize = 0.0290;
+    //constexpr const float TheMarkerSize = 0.0565;
     constexpr const int enlarge_wheight = 640;
     constexpr const int enlarge_wwidth = 480;
 
@@ -123,8 +123,8 @@ namespace on_paper {
         //上负下正，左负右正
         const vector<pair<float, float>> shifts = {
                 pair<float, float>((a4_width-TheMarkerSize)/2/a4_width, (a4_height-TheMarkerSize)/2/a4_height),
-                //pair<float, float>(0, 0.16667),
-                pair<float,float>((a4_width+TheMarkerSize)/2/a4_width, 0),
+                pair<float, float>(0, 0.16667),
+                //pair<float,float>((a4_width+TheMarkerSize)/2/a4_width, 0),
                 pair<float, float>(0, -0.16667),
                 pair<float, float>((a4_width-TheMarkerSize)/2/a4_width, -(a4_height-TheMarkerSize)/2/a4_height),
         };
