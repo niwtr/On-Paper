@@ -1,0 +1,74 @@
+
+void scaleROI(vector<Point2f> & v,
+              const Point2f& center, float scalex, float scaley){
+    Point2f &tl=v[0],&tr=v[1],&br=v[2],&bl=v[3];
+
+    //TopLeft
+    float shiftX = abs(center.x -tl.x);
+    float shiftY = abs(center.y -tl.y);
+
+    shiftX = shiftX * scalex;
+    shiftY = shiftY * scaley;
+
+    tl.x = center.x - shiftX;
+    tl.y = center.y - shiftY;
+
+
+    //topright
+
+    shiftX = abs(tr.x - center.x);
+    shiftY = abs(tr.y - center.y);
+
+    shiftX = shiftX * scalex;
+    shiftY = shiftY * scaley;
+
+    tr.x = center.x + shiftX;
+    tr.y = center.y - shiftY;
+
+    //> BottomRight
+
+    shiftX = abs(br.x - center.x);
+    shiftY = abs(br.y - center.y);
+
+    shiftX = shiftX * scalex;
+    shiftY = shiftY * scaley;
+
+    br.x = center.x + shiftX;
+    br.y = center.y + shiftY;
+    //BottomLeft
+    shiftX = abs(center.x - bl.x);
+    shiftY = abs(bl.y - center.y);
+
+    shiftX = shiftX * scalex;
+    shiftY = shiftY * scaley;
+
+    bl.x = center.x - shiftX;
+    bl.y = center.y + shiftY;
+}
+
+
+Mat readPDFtoCV(const string& filename,int DPI) {
+    poppler::document* mypdf = poppler::document::load_from_file(filename);
+    if(mypdf == NULL) {
+        cerr << "couldn't read pdf\n";
+        return Mat();
+    }
+    cout << "pdf has " << mypdf->pages() << " pages\n";
+    poppler::page* mypage = mypdf->create_page(0);
+
+    poppler::page_renderer renderer;
+    renderer.set_render_hint(poppler::page_renderer::text_antialiasing);
+    poppler::image myimage = renderer.render_page(mypage,DPI,DPI);
+    cout << "created image of  " << myimage.width() << "x"<< myimage.height() << "\n";
+
+    Mat cvimg;
+    if(myimage.format() == poppler::image::format_rgb24) {
+        Mat(myimage.height(),myimage.width(),CV_8UC3,myimage.data()).copyTo(cvimg);
+    } else if(myimage.format() == poppler::image::format_argb32) {
+        Mat(myimage.height(),myimage.width(),CV_8UC4,myimage.data()).copyTo(cvimg);
+    } else {
+        cerr << "PDF format no good\n";
+        return Mat();
+    }
+    return cvimg;
+}
