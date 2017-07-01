@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/"/>
+    <qresource prefix="/camera">
+        <file>camera.yml</file>
+    </qresource>
+</RCC>
