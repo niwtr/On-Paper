@@ -16,7 +16,6 @@ namespace on_paper {
         LayerManager(){}
         void capture(const Mat& m){ layers.push(m); }
         void overlay(){
-            int i=0;
             while(not layers.empty()){
                 auto& m = layers.front();
                 if(_layer.empty()) {

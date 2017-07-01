@@ -33,7 +33,8 @@ SOURCES += \
     OnPaper.cpp \
     Painter.cpp \
     PaperFun.cpp \
-    glcanvas.cpp
+    glcanvas.cpp \
+    optestingpanel.cpp
 
 HEADERS += \
         onpapermain.h \
@@ -46,10 +47,12 @@ HEADERS += \
     OnPaper.h \
     Painter.h \
     PaperFun.h \
-    glcanvas.h
+    glcanvas.h \
+    optestingpanel.h
 
 FORMS += \
-        onpapermain.ui
+        onpapermain.ui \
+    optestingpanel.ui
 
 SUBDIRS += \
     On-Paper.pro

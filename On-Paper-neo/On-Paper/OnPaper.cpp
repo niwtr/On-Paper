@@ -24,7 +24,7 @@ void on_paper::OnPaper::camera_start()
 
 
    allow_enlarge=false;
-   allow_trigger=false;
+   allow_triggers=false;
    allow_write=false;
    last_gesture_time = utils::curtime_msec();
    last_gesture = GestureType::PRESS;
@@ -32,64 +32,6 @@ void on_paper::OnPaper::camera_start()
    current_page=0;
 }
 
-
-
-void on_paper::OnPaper::main_loop(void) {
-
-
-
-    auto toggle_allow_write=[&]{allow_write = not allow_write;};
-    auto toggle_allow_enlarge=[&]{allow_enlarge = not allow_enlarge;};
-    auto toggle_allow_trigger=[&]{allow_trigger = not allow_trigger;};
-
-
-
-    try {
-
-
-        //cv::namedWindow("On Paper");
-        //cv::namedWindow("Scaled");
-
-        //go!
-        char key = 0;
-
-        // capture until press ESC or until the end of the video
-
-
-
-        do {
-
-
-            //cv::imshow("On Paper", TheProcessedImage);
-
-//            key = (char)cv::waitKey(1); // wait for key to be pressed
-//            if(key=='s')  {
-//                wait_time= wait_time==0?1:0;
-//            } else if(key == 'a')
-//                ac.toggle_anti_shake();
-//            else if(key=='c')
-//                pa.clear_canvas();
-//            else if (key =='k') {
-//                //ad hoc
-//                for(auto i =0;i<30;i++)
-//                    pa.kalman_trace(finger_tips[0], false);
-//                toggle_allow_write();
-//            } else if (key == 'l'){
-//                toggle_allow_enlarge();
-//            } else if(key == 't'){
-//                toggle_allow_trigger();
-//            }
-//
-
-
-        } while (key != 27 && (TheVideoCapturer.grab() ));
-
-    } catch (std::exception &ex)
-    {
-        cout << "Exception :" << ex.what() << endl;
-    }
-
-}
 
 cv::Mat &on_paper::OnPaper::process_one_frame()
 {
@@ -124,7 +66,7 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
             //传入手指的位置
             af.transmatrix=ac.get_transmatrix_inv();
 
-            if(allow_trigger) {
+            if(allow_triggers) {
                 Mat _pic;
                 Point p;
                 af.fire_event(finger_tips, p);

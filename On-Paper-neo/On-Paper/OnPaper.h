@@ -30,48 +30,50 @@
 
 
 namespace on_paper {
-    class OnPaper {
-
-    private:
-        VideoCapture TheVideoCapturer;
-        CameraParameters TheCameraParameters;
-        Mat TheInputImage;
-        Mat TheProcessedImage;
-
-        ARCapturer ac;
-        GestureJudge gj;
-        LayerManager lm;
-        Painter pa;
-        //ToolBox tb;
-        PaperFun af;
-    public:
-        OnPaper(){}
-        void init(void){
-            //TheCameraParameters.readFromXMLFile(string(ROOT) + "camera.yml"); //outdated.
-            TheCameraParameters.readFromXMLFile("./camera.yml");
-            ac.init(TheCameraParameters);
-            const Mat& img = ac.get_image();
-            pa.init(img.rows, img.cols);
-            af.initialize();
-            ac.capture_Painter(&pa);
-            af.capture_Painter(&pa);
-        }
-
-        void camera_start(void);
-        void main_loop(void);
-        Mat& process_one_frame(void);
-
+class OnPaper {
 
 private:
-        bool allow_write ;
-        bool allow_enlarge ;
-        bool allow_trigger ;
-        int wait_time=1;
-        long last_gesture_time;
-        GestureType last_gesture;
-        int current_page; //TODO move this "page" to static member of Paperfun?
+    VideoCapture TheVideoCapturer;
+    CameraParameters TheCameraParameters;
+    Mat TheInputImage;
+    Mat TheProcessedImage;
+public:
+    ARCapturer ac;
+    GestureJudge gj;
+    LayerManager lm;
+    Painter pa;
+    //ToolBox tb;
+    PaperFun af;
+public:
+    OnPaper(){}
+    void init(void){
+        //TheCameraParameters.readFromXMLFile(string(ROOT) + "camera.yml"); //outdated.
+        TheCameraParameters.readFromXMLFile("./camera.yml");
+        ac.init(TheCameraParameters);
+        const Mat& img = ac.get_image();
+        pa.init(img.rows, img.cols);
+        af.initialize();
+        ac.capture_Painter(&pa);
+        af.capture_Painter(&pa);
+    }
 
-    };
+    void camera_start(void);
+    Mat& process_one_frame(void);
+
+private:
+    int current_page; //TODO move this "page" to static member of Paperfun?
+
+public:
+
+    int wait_time=1;
+    long last_gesture_time;
+    GestureType last_gesture;
+
+
+    bool allow_write ;
+    bool allow_enlarge ;
+    bool allow_triggers ;
+};
 
 
 
