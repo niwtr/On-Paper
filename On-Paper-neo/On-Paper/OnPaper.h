@@ -40,6 +40,7 @@ private:
 public:
     ARCapturer ac;
     GestureJudge gj;
+    GestureManager * gm;
     LayerManager lm;
     Painter pa;
     //ToolBox tb;
@@ -55,6 +56,7 @@ public:
         af.initialize();
         ac.capture_Painter(&pa);
         af.capture_Painter(&pa);
+        gm = new GestureManager(&gj);
     }
 
     void camera_start(void);

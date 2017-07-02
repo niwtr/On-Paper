@@ -62,6 +62,8 @@ namespace on_paper {
 
         /* status machine. */
         GestureType get_uber_gesture(GestureType gt); // revised gesture.
+        GMState get_state(){ return this->state; }
+        bool action_gesture_changed;
 
     private: //private methods
         GestureType on_gesture_unchanged();

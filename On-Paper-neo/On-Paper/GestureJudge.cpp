@@ -43,7 +43,7 @@ on_paper::GestureManager::GestureManager(on_paper::GestureJudge *gj)
     this->last_action_time=utils::curtime_msec();
     this->accumulated_time=0;
     this->last_gesture=NONE;
-    this->stored_gesture=-1;
+    this->stored_gesture=PRESS;
 }
 
 on_paper::GestureType on_paper::GestureManager::get_uber_gesture(on_paper::GestureType gt)
@@ -118,6 +118,7 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
         case ENLARGE:
         case MOVE:
             //the gesture has already changed.
+            this->action_gesture_changed = false;
             if(last_gesture != stored_gesture){
                 //this time we should consider the acc time.
                 //ALERT: not agree with the plan!!!
@@ -125,6 +126,7 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
                     // state is unchaged.
                     stored_gesture = last_gesture; //change gesture!
                     accumulated_time = 0;
+                    this->action_gesture_changed = true;
                 }
             }
 
@@ -132,7 +134,7 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             judgedGT = stored_gesture;
             goto  exit;
         case NONE:
-            goto exit_abnormal;
+
             /*****************************/
             // this is not possibly happen.
             if(accumulated_time > 300)
@@ -193,9 +195,12 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_changed(on_paper::Ges
             last_gesture=changedTo;
             judgedGT = stored_gesture;
             goto exit;
+            //possible bug when changeTo=PRESS && last_gesture=ENLARGE or MOVE.
         case NONE:
             // ALERT modify this!!!
-            judgedGT = stored_gesture;
+            accumulated_time = 0;
+            last_gesture = changedTo;
+            judgedGT = changedTo;
             goto exit;
         }
     }

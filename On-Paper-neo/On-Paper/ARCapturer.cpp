@@ -129,9 +129,11 @@ void on_paper::ARCapturer::map_markers(void) {
             std::cout << "Panic! " << std::endl;
             exit(-9);
         }
+
         Mat M0=getPerspectiveTransform(pattern_marker_source, lamaker);
 
         vector<Point2f> __virtual_paper;
+
         perspectiveTransform(shifted_pattern_paper_source[lamaker.id%4], __virtual_paper, M0);
         if(virtual_paper.size()==0)
             virtual_paper=__virtual_paper;
@@ -204,7 +206,7 @@ void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
         image(r).copyTo(roi);
         if(roi.cols<=0)return;
         cv::resize(roi, roi, cv::Size(enlarge_wheight, enlarge_wwidth));
-        cv::imshow("Scaled", roi);
+        //cv::imshow("Scaled", roi);
         last_rect = r;
     }
 }

@@ -26,6 +26,10 @@ void on_paper::OnPaper::camera_start()
    allow_enlarge=false;
    allow_triggers=false;
    allow_write=false;
+
+   allow_enlarge= true;
+   //allow_triggers=true;
+   allow_write=   true;
    last_gesture_time = utils::curtime_msec();
    last_gesture = GestureType::PRESS;
 
@@ -46,14 +50,31 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
 
         struct Gesture gt = gj.get_gesture(TheInputImage);
 
-        if(gt.type==GestureType::NONE)
-            cout<<"NONE"<<endl;
-        if(gt.type==GestureType::ENLARGE)
-            cout<<"ENLARGE"<<endl;
-        if(gt.type==GestureType::PRESS)
-            cout<<"PRESS"<<endl;
-        if(gt.type==GestureType::MOVE)
-            cout<<"MOVE"<<endl;
+        //if(gt.type==GestureType::NONE)
+        //    cout<<"NONE"<<endl;
+        //if(gt.type==GestureType::ENLARGE)
+        //    cout<<"ENLARGE"<<endl;
+        //if(gt.type==GestureType::PRESS)
+        //    cout<<"PRESS"<<endl;
+        //if(gt.type==GestureType::MOVE)
+        //    cout<<"MOVE"<<endl;
+
+        gt.type = gm->get_uber_gesture(gt.type); // let gm to rock.
+
+
+        string anf;
+        switch(gm->get_state()){
+        case NOHAND:
+            anf="NOHAND";
+            break;
+        case INACTION:
+            anf="INACTION";
+            break;
+        case RECOGREADY:
+            anf="RECOGREADY";
+            break;
+        }
+
 
         auto finger_tips=vector<Point>{Point(0,0)};
 
@@ -81,80 +102,61 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
                 af.fire_event(finger_tips, p);
             }
 
+            if(gm->get_state() == GMState::INACTION)
+            {
+                if(gt.type == GestureType::PRESS) {
+                    pa.draw_finger_tips(finger_tips, pa.get_pen_size(), pa.get_color());
 
-            if(gt.type == GestureType::PRESS) {
-                pa.draw_finger_tips(finger_tips, pa.get_pen_size(), pa.get_color());
-
-                auto curtime = utils::curtime_msec();
-                if(last_gesture == GestureType::MOVE or last_gesture == GestureType::ENLARGE) {
-                    //之前不是press手势，说明这是从其他手势恢复到划线手势。这时，需要等待400毫秒
-                    //等待400毫秒是为了让用户有足够的时间准备好划线。
-                    //因为用户手势改变的动作是会占用时间的。
-                    if(curtime - last_gesture_time > 400)//timeout for 400msec
+                    if(gm->action_gesture_changed) //changed, trace first.
                     {
-                        //进行三十次卡尔曼追踪使得划线的光标回归手指。
-                        //注意30次只是经验。
-                        for(int i = 0;i<30;i++)
-                            pa.kalman_trace(finger_tips[0], false);
-                        last_gesture_time = curtime;
-                        last_gesture = PRESS;
+                            //进行三十次卡尔曼追踪使得划线的光标回归手指。
+                            //注意30次只是经验。
+                            for(int i = 0;i<30;i++)
+                                pa.kalman_trace(finger_tips[0], false);
+                            if(allow_write) {
+                                pa.kalman_trace(finger_tips[0], true); //trace and draw
+                                pa.text_broadcast("Writing.");
+                            }
+                    } else { // just write
                         if(allow_write) {
-                            pa.kalman_trace(finger_tips[0], true); //trace and draw
+                            pa.kalman_trace(finger_tips[0], true);
                             pa.text_broadcast("Writing.");
                         }
                     }
+                }
+                elif(gt.type == GestureType::MOVE)
+                        //TODO 哪一个跟原来的点相近，我们才应该对哪个点滤波。
+                {
+                    pa.kalman_trace(finger_tips[0], false);
+                }
 
-                } else {
-                    last_gesture_time = curtime;
-                    last_gesture = PRESS;
-                    if(allow_write) {
-                        pa.kalman_trace(finger_tips[0], true);
-                        pa.text_broadcast("Writing.");
+                elif(gt.type == GestureType::ENLARGE)
+                {
+                    pa.kalman_trace(finger_tips[0], false);
+                    Mat _image = ac.get_image();
+                    vector<Point> vp = finger_tips;
+                    for(auto & p : vp)
+                        pa.transform_point(p);
+                    auto p1 = vp[0], p2=vp[1];
+                    ac.adjust_point(p1);
+                    ac.adjust_point(p2);
+                    int xsmaller = p1.x<p2.x? p1.x:p2.x;
+                    int ysmaller = p1.y<p2.y? p1.y:p2.y;
+                    auto rw = abs(p1.x-p2.x), rh = (int)((float)rw/640*480);
+                    if(rw > 500 and allow_enlarge){ //如果窗口太小就不管了。
+                        Rect r = Rect(xsmaller, ysmaller, rw, rh);
+                        pa.draw_enlarged_rect(r);
+                        ac.display_enlarged_area(r);
+                        pa.text_broadcast("Enlarge.");
                     }
-                }
-
-            }
-            elif(gt.type == GestureType::MOVE)
-                    //TODO 哪一个跟原来的点相近，我们才应该对哪个点滤波。
-            {
-                pa.kalman_trace(finger_tips[0], false);
-                last_gesture = GestureType::MOVE;
-                last_gesture_time=utils::curtime_msec();
-            }
-            //an ad-hoc solution.
-            elif(gt.type == GestureType::ENLARGE)
-            {
-                if(last_gesture == GestureType::PRESS){
-                    auto thistime = utils::curtime_msec();
-                    if(thistime-last_gesture_time<300)
-                        goto next; // PRESS affinity
-                }
-                last_gesture = GestureType::ENLARGE;
-                last_gesture_time=utils::curtime_msec();
-                pa.kalman_trace(finger_tips[0], false);
-                Mat _image = ac.get_image();
-                vector<Point> vp = finger_tips;
-                for(auto & p : vp)
-                    pa.transform_point(p);
-                auto p1 = vp[0], p2=vp[1];
-                ac.adjust_point(p1);
-                ac.adjust_point(p2);
-                int xsmaller = p1.x<p2.x? p1.x:p2.x;
-                int ysmaller = p1.y<p2.y? p1.y:p2.y;
-                auto rw = abs(p1.x-p2.x), rh = (int)((float)rw/640*480);
-                if(rw > 500 and allow_enlarge){ //如果窗口太小就不管了。
-                    Rect r = Rect(xsmaller, ysmaller, rw, rh);
-                    pa.draw_enlarged_rect(r);
-                    ac.display_enlarged_area(r);
-                    pa.text_broadcast("Enlarge.");
                 }
             }
 
             pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
+
         }
 
 
-next:
         //Overlay!
 
         lm.capture(ac.get_processed_image());
@@ -165,8 +167,11 @@ next:
         }
 
         lm.overlay();
-        lm.output(TheProcessedImage);
 
+
+
+        lm.output(TheProcessedImage);
+        putText(TheProcessedImage, anf, Point(0, TheProcessedImage.rows/10*7), CV_FONT_VECTOR0, 5, Scalar(0,255,0), 20,LINE_AA);
 
     }catch (std::exception &ex)
     {
