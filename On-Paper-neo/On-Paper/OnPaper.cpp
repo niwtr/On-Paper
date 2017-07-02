@@ -50,14 +50,14 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
 
         struct Gesture gt = gj.get_gesture(TheInputImage);
 
-        //if(gt.type==GestureType::NONE)
-        //    cout<<"NONE"<<endl;
-        //if(gt.type==GestureType::ENLARGE)
-        //    cout<<"ENLARGE"<<endl;
-        //if(gt.type==GestureType::PRESS)
-        //    cout<<"PRESS"<<endl;
-        //if(gt.type==GestureType::MOVE)
-        //    cout<<"MOVE"<<endl;
+        if(gt.type==GestureType::NONE)
+            cout<<"NONE"<<endl;
+        if(gt.type==GestureType::ENLARGE)
+            cout<<"ENLARGE"<<endl;
+        if(gt.type==GestureType::PRESS)
+            cout<<"PRESS"<<endl;
+        if(gt.type==GestureType::MOVE)
+            cout<<"MOVE"<<endl;
 
         gt.type = gm->get_uber_gesture(gt.type); // let gm to rock.
 
@@ -90,7 +90,7 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
         // let pa to rock.
         if(mknum > 0) //detected markers!
         {
-            //tb.fire_event(finger_tip);
+
             pa.with_transmatrix(ac.get_transmatrix_inv());
             //在这里可以加入对特定领域的操作
             //传入手指的位置
@@ -109,14 +109,14 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
 
                     if(gm->action_gesture_changed) //changed, trace first.
                     {
-                            //进行三十次卡尔曼追踪使得划线的光标回归手指。
-                            //注意30次只是经验。
-                            for(int i = 0;i<30;i++)
-                                pa.kalman_trace(finger_tips[0], false);
-                            if(allow_write) {
-                                pa.kalman_trace(finger_tips[0], true); //trace and draw
-                                pa.text_broadcast("Writing.");
-                            }
+                        //进行三十次卡尔曼追踪使得划线的光标回归手指。
+                        //注意30次只是经验。
+                        for(int i = 0;i<30;i++)
+                            pa.kalman_trace(finger_tips[0], false);
+                        if(allow_write) {
+                            pa.kalman_trace(finger_tips[0], true); //trace and draw
+                            pa.text_broadcast("Writing.");
+                        }
                     } else { // just write
                         if(allow_write) {
                             pa.kalman_trace(finger_tips[0], true);
@@ -155,6 +155,7 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
             pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
 
         }
+
 
 
         //Overlay!

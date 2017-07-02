@@ -59,27 +59,26 @@ on_paper::GestureType on_paper::GestureManager::get_uber_gesture(on_paper::Gestu
 on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
 {
     GestureType judgedGT = last_gesture; // return val.
-    // accumuate time.
-    long curtime = utils::curtime_msec();
-    accumulated_time += curtime - last_action_time;
-    last_action_time = curtime;
+
+    //accumulate frame.
+    accumulated_time ++;
+
 
     //status machine.
     switch(state){
     case NOHAND:
         switch(last_gesture){
-        /*****************************************************/
         //nohand and last gesture is PRESS? that is impossible!
         case ENLARGE:
         case PRESS:
             goto exit_abnormal;
-        /*******************************************************/
+
         case NONE:
             goto exit; //unchanged, for everything.
         case MOVE:
 
             //migrate to RECOG?
-            if(accumulated_time > 1000){ //one sec
+            if(accumulated_time > 10){ // 10 frames
                //ja!
                 state=RECOGREADY;
                 accumulated_time = 0; //clear accumulated time.
@@ -92,7 +91,8 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
         case ENLARGE:
         case PRESS:
         case MOVE:
-            if(accumulated_time > 1000){ //one sec.
+
+            if(accumulated_time > 10){ //10 frames
                 state=INACTION;
                 accumulated_time = 0;
                 stored_gesture = last_gesture;
@@ -100,16 +100,12 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             goto exit;
 
         case NONE:
-            goto exit_abnormal;
-            /*********************************/
-            // might be removed.
-            // this is not possibly happen.
-            if (accumulated_time > 300){ //
+
+            if (accumulated_time > 4){
                 state = NOHAND;
                 accumulated_time = 0;
             }
             goto exit;
-            /***********************************/
 
         }
      case INACTION:
@@ -118,14 +114,17 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
         case ENLARGE:
         case MOVE:
             //the gesture has already changed.
+            //TODO this one(action_gesture_changed) is far from elegant.
+            //TODO will be removed from future.
             this->action_gesture_changed = false;
+
             if(last_gesture != stored_gesture){
+
                 //this time we should consider the acc time.
-                //ALERT: not agree with the plan!!!
-                if(accumulated_time > 400){ //400 msec.
+                if(accumulated_time > 5){ // 5 frames
                     // state is unchaged.
-                    stored_gesture = last_gesture; //change gesture!
                     accumulated_time = 0;
+                    state=RECOGREADY;
                     this->action_gesture_changed = true;
                 }
             }
@@ -135,18 +134,14 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             goto  exit;
         case NONE:
 
-            /*****************************/
             // this is not possibly happen.
-            if(accumulated_time > 300)
+            if(accumulated_time > 4) //4 frames
             {
                 state=NOHAND;
                 accumulated_time=0;
-
             }
             goto exit;
-            /******************************/
         }
-
     }
 
     exit:
