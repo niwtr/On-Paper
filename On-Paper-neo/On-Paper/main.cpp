@@ -2,12 +2,13 @@
 #include "optestingpanel.h"
 #include <QApplication>
 #include "OnPaper.h"
+#include "unistd.h"
 using namespace on_paper;
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    //close(2);
+    close(2);
     OnPaper op;
     op.init();
     op.camera_start();

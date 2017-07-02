@@ -123,9 +123,6 @@ namespace on_paper {
 
         //上负下正，左负右正
         const vector<pair<float, float>> shifts = {
-
-                //pair<float, float>((a4_width-TheMarkerSize)/2/a4_width, (a4_height-TheMarkerSize)/2/a4_height),
-                //pair<float, float>(0, 0.16667),
                 pair<float,float>((a4_width+TheMarkerSize*1.5)/2/a4_width, 0),
                 pair<float,float>((a4_width+TheMarkerSize*1.5)/2/a4_width, 0),
                 pair<float,float>((a4_width+TheMarkerSize*1.5)/2/a4_width, 0),

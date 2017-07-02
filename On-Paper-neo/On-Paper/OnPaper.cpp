@@ -46,6 +46,15 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
 
         struct Gesture gt = gj.get_gesture(TheInputImage);
 
+        if(gt.type==GestureType::NONE)
+            cout<<"NONE"<<endl;
+        if(gt.type==GestureType::ENLARGE)
+            cout<<"ENLARGE"<<endl;
+        if(gt.type==GestureType::PRESS)
+            cout<<"PRESS"<<endl;
+        if(gt.type==GestureType::MOVE)
+            cout<<"MOVE"<<endl;
+
         auto finger_tips=vector<Point>{Point(0,0)};
 
         if(gt.type != GestureType::NONE)

@@ -24,7 +24,7 @@ private slots:
 
 
 private:
-    int fps=30;
+    int fps=60;
     Ui::OnPaperMain *ui;
     QTimer * timer_camera;
 

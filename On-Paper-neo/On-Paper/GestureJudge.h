@@ -12,10 +12,10 @@ namespace on_paper {
 	using namespace std;
 
 	enum GestureType {
-		PRESS,
-		MOVE,
-		ENLARGE,
-		NONE
+        PRESS,//one
+        MOVE,//>2
+        ENLARGE,//2
+        NONE//nil
 	};
 
 	struct Gesture {
@@ -36,4 +36,59 @@ namespace on_paper {
 	private:
 		HandDetector _hd;
 	};
+
+    // higher-level manager for sequentially managing gestures.
+
+
+    // gesture manager state
+    enum GMState{
+        NOHAND,
+        RECOGREADY,
+        INACTION,
+    };
+
+ class GestureManager {
+    private:
+        GestureJudge * judge;
+        GMState state;
+        GestureType last_gesture;
+        GestureType stored_gesture;
+        long last_action_time; // last time for action
+        long accumulated_time;
+
+
+    public: // public methods
+        explicit GestureManager(GestureJudge* gj);
+
+        /* status machine. */
+        GestureType get_uber_gesture(GestureType gt); // revised gesture.
+
+    private: //private methods
+        GestureType on_gesture_unchanged();
+        GestureType on_gesture_changed(GestureType changedTo);
+
+ private:
+
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

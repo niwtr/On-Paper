@@ -209,7 +209,7 @@ namespace on_paper{
             string name;
             int i,zeronum=Num-1;
             i=page;
-            while(i=i/10)
+            while((i=i/10))
             {
                 zeronum--;
             }
