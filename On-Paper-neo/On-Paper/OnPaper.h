@@ -14,17 +14,9 @@
 #include "PaperFun.h"
 #include <QDir>
 
-
-
-#ifdef _WIN32
-
-#define and &&
-#define or ||
-#define not !
-#define ROOT "C:/Users/L.Laddie/Documents/On-Paper/ar_mask/"
-#else
-#define ROOT "../"
-#endif // _WIN32
+#include "glcanvas.h"
+#include "beforestart.h"
+#include "defs.h"
 
 #define elif else if
 
@@ -37,6 +29,8 @@ private:
     CameraParameters TheCameraParameters;
     Mat TheInputImage;
     Mat TheProcessedImage;
+    BeforeStart bs;
+
 public:
     ARCapturer ac;
     GestureJudge gj;
@@ -59,6 +53,7 @@ public:
         gm = new GestureManager(&gj);
     }
 
+    void train_hand_thrsd();
     void camera_start(void);
     Mat& process_one_frame(void);
 

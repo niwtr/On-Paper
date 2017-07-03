@@ -37,7 +37,8 @@ SOURCES += \
     PaperFun.cpp \
     glcanvas.cpp \
     optestingpanel.cpp \
-    pdfreader.cpp
+    pdfreader.cpp \
+    beforestart.cpp
 
 HEADERS += \
         onpapermain.h \
@@ -52,7 +53,9 @@ HEADERS += \
     PaperFun.h \
     glcanvas.h \
     optestingpanel.h \
-    pdfreader.h
+    pdfreader.h \
+    beforestart.h \
+    defs.h
 
 FORMS += \
         onpapermain.ui \

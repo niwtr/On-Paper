@@ -1,9 +1,10 @@
 #include "glcanvas.h"
+#include "defs.h"
 
 GLCanvas::GLCanvas(QWidget* parent)
     : QOpenGLWidget(parent)
 {
-     setFixedSize(1024,768);
+//     setFixedSize(MAIN_WIDTH, MAIN_HEIGHT);
 }
 
 void GLCanvas::setImage(const QImage& image)

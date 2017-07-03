@@ -21,23 +21,7 @@
 #include <cmath>
 #include <opencv/cv.hpp>
 
-#ifdef _WIN32
-
-#define and &&
-#define or ||
-#define not !
-
-#define ROOT "C:/Users/L.Laddie/Documents/On-Paper/ar_mask/"
-
-#else
-#define ROOT "../"
-#define IMAGEPATH "/home/heranort/Dev/example/images/"
-//#define IMAGEPATH "/home/heranort/Dev/prince/images/"
-#endif // _WIN32
-
-#define MARKERNUM 4
-#define ZERONUM 1
-
+#include "defs.h"
 
 namespace on_paper {
     /* around namespace */

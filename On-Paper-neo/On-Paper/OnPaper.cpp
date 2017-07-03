@@ -36,6 +36,14 @@ void on_paper::OnPaper::camera_start()
    current_page=0;
 }
 
+// must after camera_start triggered
+void on_paper::OnPaper::train_hand_thrsd()
+{
+    bs.set_vc(&TheVideoCapturer);
+    bs.train_thrsd();
+
+    gj.set_hand_thrsd(bs.min_ycrcb, bs.max_ycrcb);
+}
 
 cv::Mat &on_paper::OnPaper::process_one_frame()
 {
@@ -51,6 +59,7 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
 
 
         struct Gesture gt = gj.get_gesture(TheInputImage);
+        imshow("mask", gj.mask);
 
 
         if(gt.type==GestureType::NONE)

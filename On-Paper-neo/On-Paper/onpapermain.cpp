@@ -6,7 +6,7 @@ OnPaperMain::OnPaperMain(OnPaper * op, QWidget *parent) :
     ui(new Ui::OnPaperMain)
 {
     ui->setupUi(this);
-    setFixedSize(1024,768);
+    setFixedSize(MAIN_WIDTH, MAIN_HEIGHT);
 
     this->opptr = op;
     timer_camera = new QTimer;

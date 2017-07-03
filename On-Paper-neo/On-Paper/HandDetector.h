@@ -2,21 +2,7 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
-
-
-#define MIN_Cr 113
-#define MAX_Cr 173
-#define MIN_Cb 77
-#define MAX_Cb 127
-#define MIN_Y 30
-
-#define THRESHOLD_AREA 20
-#define MAX_CONTOURS_SIZE 8
-#define THRESHOLD_ANGLE 90
-#define BLUR_KSIZE 5
-#define DILATE_SIZE 5
-#define THRSD_UPDOWN 10
-//#define PI 3.14
+#include "defs.h"
 
 namespace on_paper {
 	using namespace cv;
@@ -33,7 +19,8 @@ namespace on_paper {
 	{
 
 	public:
-		HandDetector(int tar_width);
+        HandDetector(int tar_width);
+        HandDetector(int tar_width, Vec3b min_ycrcb, Vec3b max_ycrcb);
 
 		void train(const Mat& img, const Mat& mask);
 		void process(const Mat& src, Mat& des);
@@ -41,9 +28,11 @@ namespace on_paper {
 		vector<Vec3p> get_defects();
 
         // used for hand mask2(training before started)
-        static void init_thrsd(int event, int x, int y, int flags, void* vhd);
-        void update_thrsd(Vec3b p_ycrcb);
-        const Mat* last_img;
+        void set_thrsd(Vec3b min_ycrcb, Vec3b max_ycrcb)
+        {
+            _min_ycrcb = min_ycrcb;
+            _max_ycrcb = max_ycrcb;
+        }
 
 	private:
 		void init(int src_width);
@@ -81,8 +70,7 @@ namespace on_paper {
 		int _r;				// 掌心半径
 
         // YCrCb threshold
-        Vec3b min_ycrcb = Vec3b(255, 255, 255);
-        Vec3b max_ycrcb = Vec3b(0, 0, 0);
+        Vec3b _min_ycrcb, _max_ycrcb;
 	};
 
 }

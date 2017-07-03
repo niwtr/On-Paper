@@ -18,14 +18,6 @@
 
 #define EUCLID_DIST(A,B) (sqrt(fabs(pow(A.x - B.x, 2) + pow(A.y - B.y, 2))))
 
-#ifdef _WIN32
-
-#define and &&
-#define or ||
-#define not !
-
-#endif // _WIN32
-
 namespace on_paper {
     using namespace cv;
     using std::vector;

@@ -17,11 +17,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <functional>
 #include <unordered_map>
-#define CONFIGPATH "/home/heranort/Dev/example/config/"
-//#define CONFIGPATH "/home/heranort/Dev/prince/config/"
-#define PICTUREPATH "/home/heranort/Dev/example/picture/"
-//#define PICTUREPATH ""
-#define ZERONUM 1
+#include "defs.h"
 
 namespace on_paper
 {

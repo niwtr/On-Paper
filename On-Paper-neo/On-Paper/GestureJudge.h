@@ -4,8 +4,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "HandDetector.h"
-
-#define TAR_WIDTH 320
+#include "defs.h"
 
 namespace on_paper {
 	using namespace cv;
@@ -27,7 +26,12 @@ namespace on_paper {
 	public:
 		GestureJudge() : _hd(TAR_WIDTH) {
 
-		};
+        }
+
+        // only used for hand mask model 2
+        void set_hand_thrsd(Vec3b min_thrsd, Vec3b max_thrsd){
+            _hd.set_thrsd(min_thrsd, max_thrsd);
+        }
 
 		struct Gesture get_gesture(const Mat& src);
 

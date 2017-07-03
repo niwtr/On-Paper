@@ -5,6 +5,11 @@ on_paper::HandDetector::HandDetector(int tar_width) :
 {
 }
 
+on_paper::HandDetector::HandDetector(int tar_width, Vec3b min_ycrcb, Vec3b max_ycrcb):
+    _tar_width(tar_width), _min_ycrcb(min_ycrcb), _max_ycrcb(max_ycrcb)
+{
+}
+
 void on_paper::HandDetector::train(const cv::Mat& img, const cv::Mat& mask)
 {
 	Mat img_std, mask_std;
@@ -46,8 +51,6 @@ void on_paper::HandDetector::init(int src_width)
 // used otsu + YCrCb filter
 void on_paper::HandDetector::process(const cv::Mat& src, cv::Mat& dst)
 {
-    last_img = &src;    // save the last precessed img, for hand_mask2 to get pixel
-
 	init(src.size().width);
 
 	Mat src_std;
@@ -56,14 +59,18 @@ void on_paper::HandDetector::process(const cv::Mat& src, cv::Mat& dst)
 	dst = Mat::zeros(src_std.size(), CV_8UC3);
 
 	Mat mask;
-	hand_mask(src_std, mask);
+
+    if(HAND_MODEL)
+        hand_mask2(src_std, mask);
+    else
+        hand_mask(src_std, mask);
 	medianBlur(mask, mask, BLUR_KSIZE);
 
     Mat element = getStructuringElement(MORPH_RECT, Size(DILATE_SIZE, DILATE_SIZE));
     dilate(mask, mask, element);
 	
 	hand_contours(mask, src_std);
-	dst = src_std;
+    dst = mask;
 }
 
 // 按比例还原点
@@ -104,7 +111,6 @@ void on_paper::HandDetector::hand_mask(const cv::Mat& src_std, cv::Mat& dst)
 	Mat tmp;
 	threashold_Y(src_std, tmp);
 
-	Mat img_and;
 	bitwise_and(tmp, thd, dst);
 }
 
@@ -114,48 +120,6 @@ void on_paper::HandDetector::hand_mask2(const cv::Mat& src_std, cv::Mat& dst)
 	cvtColor(src_std, src_std, CV_BGR2YCrCb);
 
 	threashold_YCrCb(src_std, dst);
-}
-
-void on_paper::HandDetector::init_thrsd(int event, int x, int y, int flags, void *vhd)
-{
-    if(event == CV_EVENT_LBUTTONDOWN)
-    {
-        HandDetector* hd = (HandDetector*)vhd;
-        Vec3b p_rgb = hd->last_img->at<Vec3b>(y, x);
-
-        Mat tmp_img(1, 1, CV_8UC3);
-        tmp_img.at<Vec3b>(0, 0) = p_rgb;
-        cvtColor(tmp_img, tmp_img, CV_BGR2YCrCb);
-        Vec3b p_ycrcb = tmp_img.at<Vec3b>(0, 0);
-
-        hd->update_thrsd(p_ycrcb);
-    }
-}
-
-void on_paper::HandDetector::update_thrsd(Vec3b p_ycrcb) {
-    min_ycrcb[0] = min(p_ycrcb[0], min_ycrcb[0]);
-    min_ycrcb[1] = min(p_ycrcb[1], min_ycrcb[1]);
-    min_ycrcb[2] = min(p_ycrcb[2], min_ycrcb[2]);
-
-    max_ycrcb[0] = max(p_ycrcb[0], max_ycrcb[0]);
-    max_ycrcb[1] = max(p_ycrcb[1], max_ycrcb[1]);
-    max_ycrcb[2] = max(p_ycrcb[2], max_ycrcb[2]);
-
-    if(min_ycrcb[0] == p_ycrcb[0])
-        min_ycrcb[0] -= THRSD_UPDOWN;
-    if(min_ycrcb[1] == p_ycrcb[1])
-        min_ycrcb[1] -= THRSD_UPDOWN;
-    if(min_ycrcb[2] == p_ycrcb[2])
-        min_ycrcb[2] -= THRSD_UPDOWN;
-
-    if(max_ycrcb[0] == p_ycrcb[0])
-        max_ycrcb[0] += THRSD_UPDOWN;
-    if(max_ycrcb[1] == p_ycrcb[1])
-        max_ycrcb[1] += THRSD_UPDOWN;
-    if(max_ycrcb[2] == p_ycrcb[2])
-        max_ycrcb[2] += THRSD_UPDOWN;
-
-    cout << "thre: " << min_ycrcb << "; " << max_ycrcb << endl;
 }
 
 void on_paper::HandDetector::threashold_YCrCb(const cv::Mat& src, cv::Mat& dst)
@@ -176,8 +140,8 @@ void on_paper::HandDetector::threashold_C(const cv::Mat& src, cv::Mat& dst, int 
 	Vec3b min_v, max_v;
 	if (color_code == C_YCrCb)
 	{
-        min_v = min_ycrcb;
-        max_v = max_ycrcb;
+        min_v = _min_ycrcb;
+        max_v = _max_ycrcb;
 	}
 	else
 		return;
