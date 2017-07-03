@@ -68,8 +68,8 @@ DISTFILES += \
 PKGCONFIG += poppler-qt5
 CONFIG += link_pkgconfig
 
-LIBS += /usr/lib/libopencv_*.so
-LIBS += /usr/lib/libaruco.so.2.0
+LIBS += /usr/local/lib/libopencv_*.so
+LIBS += /usr/local/lib/libaruco.so.2.0
 
 RESOURCES += \
     resources.qrc

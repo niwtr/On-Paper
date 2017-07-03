@@ -9,7 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include "aruco/aruco.h"
-#include <nlohmann/json.hpp>
+#include "json.hpp"
 #include "cvutils.h"
 #include "Painter.h"
 #include <vector>

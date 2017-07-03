@@ -5,6 +5,52 @@ HandDetector::HandDetector(int tar_width) :
 {
 }
 
+void HandDetector::init_threshold(int event, int x, int y, int flags, void *vhd)
+{
+    if(event == CV_EVENT_LBUTTONDOWN)
+    {
+        HandDetector* hd = (HandDetector*)vhd;
+        Vec3b p_rgb = hd->_last_img->at<Vec3b>(y, x);
+
+        Mat tmp_img(1, 1, CV_8UC3);
+        tmp_img.at<Vec3b>(0, 0) = p_rgb;
+        cvtColor(tmp_img, tmp_img, CV_BGR2YCrCb);
+        Vec3b p_ycrcb = tmp_img.at<Vec3b>(0, 0);
+
+        hd->update_ycrcb(p_ycrcb);
+
+        cout << x << " " << y << p_ycrcb << endl;
+    }
+}
+
+void HandDetector::update_ycrcb(Vec3b p_ycrcb) {
+    uchar updown = 10;
+
+    min_ycrcb[0] = min(p_ycrcb[0], min_ycrcb[0]);
+    min_ycrcb[1] = min(p_ycrcb[1], min_ycrcb[1]);
+    min_ycrcb[2] = min(p_ycrcb[2], min_ycrcb[2]);
+
+    max_ycrcb[0] = max(p_ycrcb[0], max_ycrcb[0]);
+    max_ycrcb[1] = max(p_ycrcb[1], max_ycrcb[1]);
+    max_ycrcb[2] = max(p_ycrcb[2], max_ycrcb[2]);
+
+    if(min_ycrcb[0] == p_ycrcb[0])
+        min_ycrcb[0] -= updown;
+    if(min_ycrcb[1] == p_ycrcb[1])
+        min_ycrcb[1] -= updown;
+    if(min_ycrcb[2] == p_ycrcb[2])
+        min_ycrcb[2] -= updown;
+
+    if(max_ycrcb[0] == p_ycrcb[0])
+        max_ycrcb[0] += updown;
+    if(max_ycrcb[1] == p_ycrcb[1])
+        max_ycrcb[1] += updown;
+    if(max_ycrcb[2] == p_ycrcb[2])
+        max_ycrcb[2] += updown;
+
+    cout << "ans: " << min_ycrcb << endl << max_ycrcb << endl;
+}
+
 void HandDetector::train(const Mat& img, const Mat& mask)
 {
 	Mat img_std, mask_std;
@@ -36,7 +82,9 @@ void HandDetector::train(const Mat& img, const Mat& mask)
 // used otsu + YCrCb filter
 void HandDetector::process(const Mat& src, Mat& dst)
 {
-	_ctl_point = Point(0, 0);	// ÇåÁã
+    _last_img = &src;
+
+	_ctl_point = Point(0, 0);	// ï¿½ï¿½ï¿½ï¿½
 	_prop = _tar_width * 1.0 / src.size().width;
 
 	Mat src_std;
@@ -45,11 +93,14 @@ void HandDetector::process(const Mat& src, Mat& dst)
 	dst = Mat::zeros(src_std.size(), CV_8UC3);
 
 	Mat mask;
-	hand_mask(src_std, mask);
+	hand_mask2(src_std, mask);
 	medianBlur(mask, mask, BLUR_KSIZE);
 	
 	hand_contours(mask, src_std);
-	dst = src_std;
+
+    Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
+    dilate(mask, mask, element);
+	dst = mask;
 }
 
 Point HandDetector::get_fingertip()
@@ -105,8 +156,8 @@ void HandDetector::threashold_C(const Mat& src, Mat& dst, int color_code)
 	Vec3b min_v, max_v;
 	if (color_code == C_YCrCb)
 	{
-		min_v = Vec3b(MIN_Y, MIN_Cr, MIN_Cb);
-		max_v = Vec3b(255, MAX_Cr, MAX_Cb);
+		min_v = min_ycrcb;
+		max_v = max_ycrcb;
 	}
 	else
 		return;
@@ -190,7 +241,7 @@ void HandDetector::drawLine(cv::Mat &image, double theta, double rho, cv::Scalar
 	}
 }
 
-// ½ÃÕýÊÖ²¿·½Ïò
+// ï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½
 void HandDetector::ori_correct(Mat& dst, const vector<Point> &contour)
 {
 	Vec4f li;
@@ -205,14 +256,14 @@ void HandDetector::ori_correct(Mat& dst, const vector<Point> &contour)
 	drawLine(dst, phi, rho, Scalar(0));
 }
 
-// ¼ì²âÊÖÕÆ
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void HandDetector::detect_palm(const Mat& src_hand, const vector<Point>& contour, Point& center, int& r)
 {
-	// ¾àÀë±ä»»
+	// ï¿½ï¿½ï¿½ï¿½ä»»
 	Mat dist;
 	distanceTransform(src_hand, dist, DIST_L2, 3);
 
-	// ¼ì²â×îÐ¡¾ØÐÎ£¬ËõÐ¡¼ì²â·¶Î§
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½â·¶Î§
 	Rect rec = boundingRect(contour);
 
 	int temp = 0, R = 0, cx = 0, cy = 0, flag;
@@ -220,7 +271,7 @@ void HandDetector::detect_palm(const Mat& src_hand, const vector<Point>& contour
 	{
 		for (int j = rec.x; j < rec.x + rec.width; j++)
 		{
-			// ¼ì²âÊÇ·ñÔÚÂÖÀªÄÚ£¬Ó°ÏìÊµÊ±ÐÔ
+			// ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½Ó°ï¿½ï¿½ÊµÊ±ï¿½ï¿½
 			//flag = pointPolygonTest(contour, Point2f(j, i), 0);	
 			//if (flag > 0)
 			{
@@ -241,13 +292,13 @@ void HandDetector::detect_palm(const Mat& src_hand, const vector<Point>& contour
 	//normalize(dist, dst_palm, 0, 1, CV_MINMAX);
 }
 
-// Á½µã¾àÀë
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 float HandDetector::distance_P2P(Point a, Point b) {
 	float d = sqrt(fabs(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)));
 	return d;
 }
 
-// »ñµÃÈýµã½Ç¶È(»¡¶ÈÖÆ)
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
 float HandDetector::get_angle(Point s, Point f, Point e) {
 	float l1 = distance_P2P(f, s);
 	float l2 = distance_P2P(f, e);
@@ -257,7 +308,7 @@ float HandDetector::get_angle(Point s, Point f, Point e) {
 	return angle;
 }
 
-// ´¦ÀíÒ»¸öÂÖÀª
+// ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const Point center, const int r)
 {
 	vector<Point> hull;
@@ -267,26 +318,26 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const 
 
 	Scalar color = Scalar(255, 255, 255);
 
-	// µÀ¸ñÀ­Ë¹-ÆÕ¿ËËã·¨
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¹-ï¿½Õ¿ï¿½ï¿½ã·¨
 	approxPolyDP(Mat(contour), approxCurve, 15, true);
 
-	// ¼ÆËã±Õ°üºÍÍ¹È±ÏÝ
+	// ï¿½ï¿½ï¿½ï¿½Õ°ï¿½ï¿½ï¿½Í¹È±ï¿½ï¿½
 	convexHull(Mat(approxCurve), hull, false);
 	convexHull(Mat(approxCurve), hullsI, false);
 
-	// »­³öÂÖÀªºÍÍ¹°ü
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¹ï¿½ï¿½
 	//draw_contour(dst, contour, color, 2);
 	draw_contour(dst, approxCurve, color, 1);
 	draw_contour(dst, hull, color, 1);
 
-	// Î´¼ì²âµ½ÊÖÖ¸£¨ÊÖÕÆ±ÕºÏ×´Ì¬£©
+	// Î´ï¿½ï¿½âµ½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Æ±Õºï¿½×´Ì¬ï¿½ï¿½
 	if (matchShapes(approxCurve, hull, CV_CONTOURS_MATCH_I1, 0) == 0)
 		return;
 
-	// ¾ÀÕý·½Ïò
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	//ori_correct(dst, contour);
 
-	// ÕÒ¾àÀëÕÆÐÄ×îÔ¶Í¹°üµã
+	// ï¿½Ò¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶Í¹ï¿½ï¿½ï¿½ï¿½
 	float tmp_max = 0, tmp = 0;
 	Point far_max(0, 0);
 	for (int j = 0; j < hullsI.size(); j++)
@@ -294,14 +345,14 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const 
 		int k = hullsI[j];
 
 		tmp = distance_P2P(center, approxCurve[k]);
-		if (tmp_max < tmp && approxCurve[k].x != dst.cols-1 && approxCurve[k].y != dst.rows-1) // Ö¸¼â²»»á³öÏÖÔÚ±ßÔµ
+		if (tmp_max < tmp && approxCurve[k].x != dst.cols-1 && approxCurve[k].y != dst.rows-1) // Ö¸ï¿½â²»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú±ï¿½Ôµ
 		{
 			tmp_max = tmp;
 			far_max = approxCurve[k];
 		}
 	}
 	
-	// ¼ÆËãÍ¹È±ÏÝ
+	// ï¿½ï¿½ï¿½ï¿½Í¹È±ï¿½ï¿½
 	convexityDefects(Mat(approxCurve), hullsI, defects);
 	vector<Vec4i>::iterator d = defects.begin();
 	while (d != defects.end()) {
@@ -327,29 +378,29 @@ void HandDetector::handle_contour(Mat& dst, const vector<Point> &contour, const 
 	}
 }
 
-// ¼ì²âÊÖ²¿ÂÖÀª
+// ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½
 void HandDetector::hand_contours(const Mat& src, Mat& dst)
 {
 	vector<vector<Point> > contours;
 	findContours(src, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
-	// Î´¼ì²âµ½ÊÖ
+	// Î´ï¿½ï¿½âµ½ï¿½ï¿½
 	if (contours.size() == 0 || contours.size() > MAX_CONTOURS_SIZE)
 		return;
 
-	// ¼ì²â×î´óÂÖÀª
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	int idx = biggest_contour(contours);
 
-	// ¼ì²âÊÖÕÆ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	Point center;
 	int r;
 	detect_palm(src, contours[idx], center, r);
 	circle(dst, center, r, Scalar(255, 0, 0));
 
-	// ´¦ÀíÂÖÀª	
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½	
 	handle_contour(dst, contours[idx], center, r);
 
-	// »­³öËùÓÐÂÖÀª
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	//int va_contours = 0;
 	//for (int i = 0; i < contours.size(); i++) {
 	//	double area = contourArea(contours[i]);

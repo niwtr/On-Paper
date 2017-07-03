@@ -59,8 +59,16 @@ public:
 
 	void threashold_Y(const Mat& src, Mat& dst);
 
+    static void init_threshold(int event, int x, int y, int flags, void* vhd);
+
+    void update_ycrcb(Vec3b p_ycrcb);
+    const Mat* _last_img;
+
 private:
 	int _tar_width;
 	Point _ctl_point;
 	double _prop;
+
+    Vec3b min_ycrcb = Vec3b(255, 255, 255);
+    Vec3b max_ycrcb = Vec3b(0, 0, 0);
 };

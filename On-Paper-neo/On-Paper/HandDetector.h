@@ -14,6 +14,8 @@
 #define MAX_CONTOURS_SIZE 8
 #define THRESHOLD_ANGLE 90
 #define BLUR_KSIZE 5
+#define DILATE_SIZE 5
+#define THRSD_UPDOWN 10
 //#define PI 3.14
 
 namespace on_paper {
@@ -37,6 +39,11 @@ namespace on_paper {
 		void process(const Mat& src, Mat& des);
 		Point get_fingertip();
 		vector<Vec3p> get_defects();
+
+        // used for hand mask2(training before started)
+        static void init_thrsd(int event, int x, int y, int flags, void* vhd);
+        void update_thrsd(Vec3b p_ycrcb);
+        const Mat* last_img;
 
 	private:
 		void init(int src_width);
@@ -72,6 +79,10 @@ namespace on_paper {
 		vector<Vec3p> _defects;		// 凸缺陷
 		Point _center;		// 掌心坐标
 		int _r;				// 掌心半径
+
+        // YCrCb threshold
+        Vec3b min_ycrcb = Vec3b(255, 255, 255);
+        Vec3b max_ycrcb = Vec3b(0, 0, 0);
 	};
 
 }

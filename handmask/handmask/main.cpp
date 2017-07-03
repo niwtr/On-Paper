@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <cstdio>
-#include <direct.h>
 #include <opencv2/opencv.hpp>
 
 #include "HandDetector.h"
@@ -15,9 +14,7 @@ int main(int argc, char* argv[])
 	int train = 0;				// train or test
 	int tar_width = 320;		// resizing the input image
 
-	char buffer[_MAX_PATH];
-	getcwd(buffer, _MAX_PATH);
-	string root = buffer;
+	string root = ".";
 
 	HandDetector hd(tar_width);
 
@@ -61,7 +58,7 @@ int main(int argc, char* argv[])
 		string video_name = root + "\\test1.mp4";
 
 		VideoCapture cap;
-		cap.open(1);
+		cap.open(0);
 		if (!cap.isOpened()) {
 			cerr << "Error: cannot open camera\n";
 			return -1;
@@ -71,9 +68,15 @@ int main(int argc, char* argv[])
 		int cnt = 0;
 		time_t start, stop;
 		start = time(NULL);
+
+		int first = 1;
+		namedWindow("Finger_Tip");
+		setMouseCallback("Finger_Tip", HandDetector::init_threshold, &hd);
+
 		while (1)
 		{
 			cap >> img;
+            cap >> img;
 			if (!img.data)
 				break;
 
@@ -83,6 +86,14 @@ int main(int argc, char* argv[])
 			Point finger_tip = hd.get_fingertip();
 			circle(img, finger_tip, 4, Scalar(0, 0, 255), 2);
 			imshow("Finger_Tip", img);
+
+            if(first)
+            {
+                waitKey(0);
+                setMouseCallback("Finger_Tip", NULL);
+                first = 0;
+                continue;
+            }
 
 			waitKey(1);
 
