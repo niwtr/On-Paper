@@ -42,7 +42,7 @@ void on_paper::OnPaper::train_hand_thrsd()
     bs.set_vc(&TheVideoCapturer);
     bs.train_thrsd();
 
-    gj.set_hand_thrsd(bs.min_ycrcb, bs.max_ycrcb);
+    gj.set_hand_thrsd(bs.min_color, bs.max_color);
 }
 
 cv::Mat &on_paper::OnPaper::process_one_frame()

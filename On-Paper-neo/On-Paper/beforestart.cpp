@@ -44,34 +44,34 @@ void on_paper::BeforeStart::update_thrsd(int x, int y)
 
     Mat tmp_img(1, 1, CV_8UC3);
     tmp_img.at<Vec3b>(0, 0) = p_rgb;
-    cvtColor(tmp_img, tmp_img, CV_BGR2YCrCb);
-    Vec3b p_ycrcb = tmp_img.at<Vec3b>(0, 0);
+    cvtColor(tmp_img, tmp_img, COLOR_TO_TYPE);
+    Vec3b p_color = tmp_img.at<Vec3b>(0, 0);
 
-    min_ycrcb[0] = min(p_ycrcb[0], min_ycrcb[0]);
-    min_ycrcb[1] = min(p_ycrcb[1], min_ycrcb[1]);
-    min_ycrcb[2] = min(p_ycrcb[2], min_ycrcb[2]);
+    min_color[0] = min(p_color[0], min_color[0]);
+    min_color[1] = min(p_color[1], min_color[1]);
+    min_color[2] = min(p_color[2], min_color[2]);
 
-    max_ycrcb[0] = max(p_ycrcb[0], max_ycrcb[0]);
-    max_ycrcb[1] = max(p_ycrcb[1], max_ycrcb[1]);
-    max_ycrcb[2] = max(p_ycrcb[2], max_ycrcb[2]);
+    max_color[0] = max(p_color[0], max_color[0]);
+    max_color[1] = max(p_color[1], max_color[1]);
+    max_color[2] = max(p_color[2], max_color[2]);
 
-    if(min_ycrcb[0] == p_ycrcb[0])
-        min_ycrcb[0] -= THRSD_UPDOWN;
-    if(min_ycrcb[1] == p_ycrcb[1])
-        min_ycrcb[1] -= THRSD_UPDOWN;
-    if(min_ycrcb[2] == p_ycrcb[2])
-        min_ycrcb[2] -= THRSD_UPDOWN;
+    if(min_color[0] == p_color[0] && min_color[0] - THRSD_UPDOWN >= 0)
+        min_color[0] -= THRSD_UPDOWN;
+    if(min_color[1] == p_color[1] && min_color[1] - THRSD_UPDOWN >= 0)
+        min_color[1] -= THRSD_UPDOWN;
+    if(min_color[2] == p_color[2] && min_color[2] - THRSD_UPDOWN >= 0)
+        min_color[2] -= THRSD_UPDOWN;
 
-    if(max_ycrcb[0] == p_ycrcb[0])
-        max_ycrcb[0] += THRSD_UPDOWN;
-    if(max_ycrcb[1] == p_ycrcb[1])
-        max_ycrcb[1] += THRSD_UPDOWN;
-    if(max_ycrcb[2] == p_ycrcb[2])
-        max_ycrcb[2] += THRSD_UPDOWN;
+    if(max_color[0] == p_color[0] && max_color[0] + THRSD_UPDOWN <= 255)
+        max_color[0] += THRSD_UPDOWN;
+    if(max_color[1] == p_color[1] && max_color[1] + THRSD_UPDOWN <= 255)
+        max_color[1] += THRSD_UPDOWN;
+    if(max_color[2] == p_color[2] && max_color[2] + THRSD_UPDOWN <= 255)
+        max_color[2] += THRSD_UPDOWN;
 
     // draw cicle on the pixel
     circle(last_img, Point(x, y), 3, Scalar(0, 0, 255), 0);
     imshow("Before Start", last_img);
 
-    cout << "thre: " << min_ycrcb << "; " << max_ycrcb << endl;
+    cout << "thre: " << min_color << "; " << max_color << endl;
 }

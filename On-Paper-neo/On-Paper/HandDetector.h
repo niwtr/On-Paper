@@ -8,10 +8,6 @@ namespace on_paper {
 	using namespace cv;
 	using namespace std;
 
-	enum ColorSpaceType {
-		C_YCrCb, C_YUV, C_HSV
-	};
-
 	typedef Vec<Point, 3> Vec3p;
 
 
@@ -22,7 +18,6 @@ namespace on_paper {
         HandDetector(int tar_width);
         HandDetector(int tar_width, Vec3b min_ycrcb, Vec3b max_ycrcb);
 
-		void train(const Mat& img, const Mat& mask);
 		void process(const Mat& src, Mat& des);
 		Point get_fingertip();
 		vector<Vec3p> get_defects();
@@ -30,8 +25,8 @@ namespace on_paper {
         // used for hand mask2(training before started)
         void set_thrsd(Vec3b min_ycrcb, Vec3b max_ycrcb)
         {
-            _min_ycrcb = min_ycrcb;
-            _max_ycrcb = max_ycrcb;
+            _min_color = min_ycrcb;
+            _max_color = max_ycrcb;
         }
 
 	private:
@@ -55,9 +50,7 @@ namespace on_paper {
 		Point cvt_prop(Point p);
 
 		// threshold for skin
-		void threashold_C(const Mat& src, Mat& dst, int color_code);
-		void threashold_YCrCb(const Mat& src, Mat& dst);
-		void threashold_YUV(const Mat& src, Mat& dst);
+        void threashold_color(const Mat& src, Mat& dst);
 		void threashold_Y(const Mat& src, Mat& dst);
 
 
@@ -69,8 +62,8 @@ namespace on_paper {
 		Point _center;		// 掌心坐标
 		int _r;				// 掌心半径
 
-        // YCrCb threshold
-        Vec3b _min_ycrcb, _max_ycrcb;
+        // color threshold
+        Vec3b _min_color, _max_color;
 	};
 
 }

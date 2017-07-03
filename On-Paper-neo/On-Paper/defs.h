@@ -12,8 +12,10 @@
 #define MARKERNUM 4
 #define ZERONUM 1
 
+
 // beforestart.h
 #define THRSD_UPDOWN 10
+
 
 // HandDetector.h
 #define MIN_Cr 113
@@ -27,10 +29,15 @@
 #define THRESHOLD_ANGLE 90
 #define BLUR_KSIZE 5
 #define DILATE_SIZE 4
-//#define PI 3.14
+
+// used for hand model 2
+// include type: CV_BGR2RGB/CV_BGR2YCrCb/CV_BGR2YUV/CV_BGR2HSV_FULL/CV_BGR2Lab
+#define COLOR_TO_TYPE CV_BGR2YCrCb
+
 
 // GestureJudge.h
 #define TAR_WIDTH 320
+
 
 // PaperFun.h
 #define CONFIGPATH "/home/heranort/Dev/example/config/"

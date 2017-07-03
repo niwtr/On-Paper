@@ -25,8 +25,8 @@ public:
 
     static void mouse_trigger(int event, int x, int y, int flags, void *vbs);
 
-    Vec3b min_ycrcb = Vec3b(255, 255, 255);
-    Vec3b max_ycrcb = Vec3b(0, 0, 0);
+    Vec3b min_color = Vec3b(255, 255, 255);
+    Vec3b max_color = Vec3b(0, 0, 0);
 
 private:
     VideoCapture *_vc;

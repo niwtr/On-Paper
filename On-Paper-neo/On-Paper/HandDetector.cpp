@@ -6,36 +6,8 @@ on_paper::HandDetector::HandDetector(int tar_width) :
 }
 
 on_paper::HandDetector::HandDetector(int tar_width, Vec3b min_ycrcb, Vec3b max_ycrcb):
-    _tar_width(tar_width), _min_ycrcb(min_ycrcb), _max_ycrcb(max_ycrcb)
+    _tar_width(tar_width), _min_color(min_ycrcb), _max_color(max_ycrcb)
 {
-}
-
-void on_paper::HandDetector::train(const cv::Mat& img, const cv::Mat& mask)
-{
-	Mat img_std, mask_std;
-	resize(img, img_std, Size(_tar_width, _tar_width * 1.0 / img.size().width * img.size().height));
-	resize(mask, mask_std, Size(_tar_width, _tar_width * 1.0 / img.size().width * img.size().height));
-
-	cvtColor(img_std, img_std, CV_BGR2Lab);
-	if (mask.channels() == 3)
-		cvtColor(mask_std, mask_std, CV_BGR2GRAY);
-
-	Vec3i avg_color(0, 0, 0);
-	int cnt = 0;
-	for (int i = 0; i < img_std.rows; i++)
-	{
-		for (int j = 0; j < img_std.cols; j++)
-		{
-			if (mask_std.at<uchar>(i, j) == 255)
-			{
-				Vec3b cur = img_std.at<Vec3b>(i, j);
-				avg_color += cur;
-				cnt++;
-			}
-		}
-	}
-
-	cout << avg_color / cnt << endl;
 }
 
 // 初始化新图
@@ -117,41 +89,23 @@ void on_paper::HandDetector::hand_mask(const cv::Mat& src_std, cv::Mat& dst)
 // detect hand mask: method 2
 void on_paper::HandDetector::hand_mask2(const cv::Mat& src_std, cv::Mat& dst)
 {
-	cvtColor(src_std, src_std, CV_BGR2YCrCb);
+    cvtColor(src_std, src_std, COLOR_TO_TYPE);
 
-	threashold_YCrCb(src_std, dst);
-}
-
-void on_paper::HandDetector::threashold_YCrCb(const cv::Mat& src, cv::Mat& dst)
-{
-	threashold_C(src, dst, C_YCrCb);
-}
-
-void on_paper::HandDetector::threashold_YUV(const cv::Mat& src, cv::Mat& dst)
-{
-	threashold_C(src, dst, C_YUV);
+    threashold_color(src_std, dst);
 }
 
 // color filter with different kind of color space type
-void on_paper::HandDetector::threashold_C(const cv::Mat& src, cv::Mat& dst, int color_code)
+void on_paper::HandDetector::threashold_color(const cv::Mat& src, cv::Mat& dst)
 {
 	dst = Mat::zeros(src.size(), CV_8UC1);
-
-	Vec3b min_v, max_v;
-	if (color_code == C_YCrCb)
-	{
-        min_v = _min_ycrcb;
-        max_v = _max_ycrcb;
-	}
-	else
-		return;
 
 	for (int i = 0; i < src.rows; i++)
 	{
 		for (int j = 0; j < src.cols; j++)
 		{
 			Vec3b ele = src.at<Vec3b>(i, j);
-			if(ele[0] > min_v[0] && ele[0] < max_v[0] && ele[1] > min_v[1] && ele[1] < max_v[1] && ele[2] > min_v[2] && ele[2] < max_v[2])
+            if(ele[0] > _min_color[0] && ele[0] < _max_color[0] && ele[1] > _min_color[1] &&
+                    ele[1] < _max_color[1] && ele[2] > _min_color[2] && ele[2] < _max_color[2])
 			{
 				dst.at<uchar>(i, j) = 255;
 			}
