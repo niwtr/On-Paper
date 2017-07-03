@@ -10,6 +10,7 @@
 #include <sstream>
 #include "aruco/aruco.h"
 #include "Painter.h"
+#include "pdfreader.h"
 #include <vector>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -78,6 +79,7 @@ namespace on_paper {
         bool perform_anti_shake;
 
         MarkerDetector MDetector;
+        PDFReader PdfReader;
 
         vector<Marker> TheMarkers;
         vector< Marker > TheLastMarkers;
@@ -90,7 +92,7 @@ namespace on_paper {
         Mat transmatrix;
 
         //the image (pdf paper) to display
-        Mat image;
+        Mat pdf_paper_image;
 
         Painter * pa_ptr;
         bool need_white_transparent = true;
@@ -138,19 +140,19 @@ namespace on_paper {
         const Mat& get_transmatrix_inv(){return transmatrix_inv;}
         void input_image(Mat &m){this->TheInputImageCopy = m;}
         Mat get_processed_image(){ return this->TheInputImageCopy; }
-        const Mat& get_image(){ return this->image;}
+        const Mat& get_image(){ return this->pdf_paper_image;}
         Mat get_virtual_paper_layer(){return this->VirtualPaperImage;}
         unsigned long process();
         void init(CameraParameters cp);
         void toggle_anti_shake(){this->perform_anti_shake = not this->perform_anti_shake;}
         inline void adjust_point(Point& p){
                 p.x = p.x<0?0:p.x;
-                p.x = p.x>image.cols?image.cols:p.x;
+                p.x = p.x>pdf_paper_image.cols?pdf_paper_image.cols:p.x;
                 p.y = p.y<0?0:p.y;
-                p.y = p.y>image.rows?image.rows:p.y;
+                p.y = p.y>pdf_paper_image.rows?pdf_paper_image.rows:p.y;
         }
         void display_enlarged_area(Rect r);
-        const int& get_page(){return cur_page;};
+        const int& get_page(){return cur_page;}
 
     private:
 
@@ -164,7 +166,9 @@ namespace on_paper {
         cv::Mat resize(const cv::Mat &in,int width);
         void anti_shake(void);
         void fill_markers(void);
+        cv::Mat imgread(vector<Marker>); //deprecated.
         cv::Mat pdfread(vector<Marker>);
+
 
     };
 

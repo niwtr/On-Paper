@@ -48,7 +48,10 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
         ac.input_image(TheInputImage);
         auto mknum = ac.process();//num of markers.
 
+
+
         struct Gesture gt = gj.get_gesture(TheInputImage);
+
 
         if(gt.type==GestureType::NONE)
             cout<<"NONE"<<endl;
@@ -155,8 +158,6 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
             pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
 
         }
-
-
 
         //Overlay!
 

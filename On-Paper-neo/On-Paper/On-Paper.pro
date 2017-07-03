@@ -24,6 +24,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 
+include(QZXing/QZXing.pri)
+
 SOURCES += \
         main.cpp \
         onpapermain.cpp \
@@ -34,7 +36,8 @@ SOURCES += \
     Painter.cpp \
     PaperFun.cpp \
     glcanvas.cpp \
-    optestingpanel.cpp
+    optestingpanel.cpp \
+    pdfreader.cpp
 
 HEADERS += \
         onpapermain.h \
@@ -48,7 +51,8 @@ HEADERS += \
     Painter.h \
     PaperFun.h \
     glcanvas.h \
-    optestingpanel.h
+    optestingpanel.h \
+    pdfreader.h
 
 FORMS += \
         onpapermain.ui \

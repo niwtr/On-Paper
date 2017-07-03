@@ -25,7 +25,16 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
     MDetector.setCornerRefinementMethod(aruco::MarkerDetector::SUBPIX);
     TheInputImageCopy = Mat::zeros(100,100,CV_8UC1); //FIXME potential bug.
     TheLastMarkers=MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
-    image = imread(string(IMAGEPATH) + "example-"+"1.png");
+
+    PdfReader.load_pdf("/home/heranort/Mastering_opencv.pdf");
+    if(PdfReader.render_pdf_page(1))
+        pdf_paper_image=PdfReader.cv_get_pdf_image();
+    else
+        exit(121);//ad-hoc.
+
+
+
+    //pdf_paper_image = imread(string(IMAGEPATH) + "example-"+"1.png");
     //image = imread(string(IMAGEPATH) + "prince-"+"0.png");
 
     //image= readPDFtoCV("../rt.pdf", 300);
@@ -55,10 +64,10 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
                 get_shifted_paper_pattern(s.first, s.second, pattern_paper_source));
 
     this->original_image_pattern = {
-            Point2f(image.cols, image.rows),
-            Point2f(0, image.rows),
+            Point2f(pdf_paper_image.cols, pdf_paper_image.rows),
+            Point2f(0, pdf_paper_image.rows),
             Point2f(0, 0),
-            Point2f(image.cols, 0)
+            Point2f(pdf_paper_image.cols, 0)
     };
     MDetector.setDictionary("ARUCO");
     MDetector.setThresholdParams(7, 7);
@@ -124,7 +133,7 @@ void on_paper::ARCapturer::map_markers(void) {
         if(exists_in_middle and (lamaker.id%4 == 0 or lamaker.id%4 == 3))
             continue;
 
-        Point mcenter = lamaker.getCenter();
+        //Point mcenter = lamaker.getCenter();
         if (lamaker.size() != 4) {
             std::cout << "Panic! " << std::endl;
             exit(-9);
@@ -148,16 +157,16 @@ void on_paper::ARCapturer::map_markers(void) {
     this->transmatrix_inv = M_inv; //set val to M_inv.
     this->transmatrix = M; // set val to M.
     Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
-    image=pdfread(TheMarkers);
+    pdf_paper_image=pdfread(TheMarkers);
 
 
     this->original_image_pattern = {
-            Point2f(image.cols, image.rows),
-            Point2f(0, image.rows),
+            Point2f(pdf_paper_image.cols, pdf_paper_image.rows),
+            Point2f(0, pdf_paper_image.rows),
             Point2f(0, 0),
-            Point2f(image.cols, 0)
+            Point2f(pdf_paper_image.cols, 0)
     };
-    warpPerspective(image, transf, M, TheInputImageCopy.size(), cv::INTER_NEAREST);
+    warpPerspective(pdf_paper_image, transf, M, TheInputImageCopy.size(), cv::INTER_NEAREST);
     //if(need_white_transparent)
         utils::white_transparent(transf, transf);
 
@@ -174,7 +183,7 @@ vector<cv::Point2f> on_paper::ARCapturer::vector_avg2(const vector<cv::Point2f> 
         cout<<"Vectors must be of same size!"<<endl;
         exit(999);
     }
-    for(auto i = 0;i<src1.size();i++)
+    for(unsigned int i = 0;i<src1.size();i++)
         dst.push_back(Point2f((src1[i].x+src2[i].x)/2, (src1[i].y+src2[i].y)/2));
     return dst;
 }
@@ -200,10 +209,10 @@ void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
     //do some anti-shape
     if(utils::distance_P2P(Point(r.x, r.y), Point(last_rect.x, last_rect.y)) > 20) {
         Mat roi = Mat();
-        if(r.x +r.width > image.cols or
-                r.y+r.height >image.rows)
+        if(r.x +r.width > pdf_paper_image.cols or
+                r.y+r.height >pdf_paper_image.rows)
             return;
-        image(r).copyTo(roi);
+        pdf_paper_image(r).copyTo(roi);
         if(roi.cols<=0)return;
         cv::resize(roi, roi, cv::Size(enlarge_wheight, enlarge_wwidth));
         //cv::imshow("Scaled", roi);
@@ -212,11 +221,11 @@ void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
 }
 
 //根据marker的值读取相对应的页
-cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker) {
+cv::Mat on_paper::ARCapturer::imgread(vector<aruco::Marker> marker) {
     int id,page;
     string picname;
     cv::Mat img;
-    for (int i=0;i<marker.size();i++)
+    for (unsigned int i=0;i<marker.size();i++)
     {
         id=marker[i].id;
         if(id > special_page_start)//special
@@ -247,9 +256,36 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker) {
         pa_ptr->init_canvas_of_page(cur_page);
     }
     else
-        img=image;
+        img=pdf_paper_image;
 
 
+
+    return img;
+}
+
+cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker)
+{
+    if(marker.size()<=0)
+        exit(122);
+
+    int id,page;
+    string picname;
+    cv::Mat img;
+    for(auto& m : marker){
+        id=m.id;
+        page=id/MARKERNUM +1;
+    }
+
+    if(page!=cur_page)
+    {
+        PdfReader.render_pdf_page(page);
+        need_white_transparent = false;//four channels, horray!
+        cur_page=page;
+        img=PdfReader.cv_get_pdf_image();
+        pa_ptr->init_canvas_of_page(cur_page);
+    }
+    else
+        img=pdf_paper_image;
 
     return img;
 }

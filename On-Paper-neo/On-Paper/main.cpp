@@ -3,9 +3,11 @@
 #include <QApplication>
 #include "OnPaper.h"
 #include "unistd.h"
+#include <QZXing.h>
 using namespace on_paper;
 int main(int argc, char *argv[])
 {
+
     QApplication a(argc, argv);
 
     close(2);
