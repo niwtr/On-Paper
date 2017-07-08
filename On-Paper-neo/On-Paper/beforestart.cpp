@@ -1,11 +1,14 @@
 #include "beforestart.h"
 
+#include <unistd.h>
 on_paper::BeforeStart::BeforeStart()
 {
     if(HAND_MODEL)
     {
-        namedWindow("Before Start");
-        setMouseCallback("Before Start", mouse_trigger, this);
+        G.register_mouseEvent_callbacks("",
+                                        [&](int x, int y){
+            update_thrsd(x,y);
+        });
     }
 }
 
@@ -17,15 +20,15 @@ void on_paper::BeforeStart::train_thrsd()
         *_vc >> last_img;
 
         resize(last_img, last_img, Size(MAIN_WIDTH, MAIN_HEIGHT));
-        imshow("Before Start", last_img);
-        waitKey(0);
-
-        destroyWindow("Before Start");
+        G.imshow(last_img);
+        G.waitKey();
+        G.close();
     }
     catch (std::exception &ex)
     {
         cerr << "Exception :" << ex.what() << endl;
     }
+
 }
 
 void on_paper::BeforeStart::mouse_trigger(int event, int x, int y, int flags, void *vbs)
@@ -71,7 +74,7 @@ void on_paper::BeforeStart::update_thrsd(int x, int y)
 
     // draw cicle on the pixel
     circle(last_img, Point(x, y), 3, Scalar(0, 0, 255), 0);
-    imshow("Before Start", last_img);
+    G.imshow(last_img);
 
     cout << "thre: " << min_color << "; " << max_color << endl;
 }

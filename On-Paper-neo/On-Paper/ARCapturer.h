@@ -14,10 +14,6 @@
 #include <vector>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-//#include <poppler/cpp/poppler-document.h>
-//#include <poppler/cpp/poppler-page.h>
-//#include <poppler/cpp/poppler-page-renderer.h>
-//#include <poppler/cpp/poppler-image.h>
 #include <cmath>
 #include <opencv/cv.hpp>
 

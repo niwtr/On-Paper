@@ -26,7 +26,8 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
     TheInputImageCopy = Mat::zeros(100,100,CV_8UC1); //FIXME potential bug.
     TheLastMarkers=MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
 
-    PdfReader.load_pdf("/home/han/test.pdf");
+    //PdfReader.load_pdf("/home/han/test.pdf");
+    PdfReader.load_pdf("/home/heranort/2.pdf");
     if(PdfReader.render_pdf_page(1))
         pdf_paper_image=PdfReader.cv_get_pdf_image();
     else

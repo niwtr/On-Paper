@@ -3,8 +3,7 @@
 //
 
 #include "OnPaper.h"
-#include <ctime>
-
+#include <QElapsedTimer>
 
 void on_paper::OnPaper::camera_start()
 {
@@ -22,7 +21,6 @@ void on_paper::OnPaper::camera_start()
     if (TheCameraParameters.isValid())
         TheCameraParameters.resize(TheInputImage.size());
 
-
    allow_enlarge=false;
    allow_triggers=false;
    allow_write=false;
@@ -37,10 +35,24 @@ void on_paper::OnPaper::camera_start()
 }
 
 // must after camera_start triggered
+void on_paper::OnPaper::init(){
+    status=op_normal;
+    TheCameraParameters.readFromXMLFile("./camera.yml");
+    ac.init(TheCameraParameters);
+    const Mat& img = ac.get_image();
+    pa.init(img.rows, img.cols);
+    af.initialize();
+    ac.capture_Painter(&pa);
+    af.capture_Painter(&pa);
+    gm = new GestureManager(&gj);
+    bcd.setDecoder(BarCodeDecoder::DecoderFormat_EAN_13);
+}
+
 void on_paper::OnPaper::train_hand_thrsd()
 {
     bs.set_vc(&TheVideoCapturer);
     bs.train_thrsd();
+
 
     gj.set_hand_thrsd(bs.min_color, bs.max_color);
 }
@@ -48,12 +60,23 @@ void on_paper::OnPaper::train_hand_thrsd()
 cv::Mat &on_paper::OnPaper::process_one_frame()
 {
 
-    try{
-
         //get input image!!!
-        TheVideoCapturer>>TheInputImage;
+    TheVideoCapturer>>TheInputImage;
+    if(status == op_normal)
+        return _process_normal();
+    else
+        return _process_barcode();
 
+
+}
+
+cv::Mat &on_paper::OnPaper::_process_normal()
+{
+    try{
         ac.input_image(TheInputImage);
+
+
+
         auto mknum = ac.process();//num of markers.
 
 
@@ -190,5 +213,12 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
     }
     return this->TheProcessedImage;
 
+
 }
 
+cv::Mat &on_paper::OnPaper::_process_barcode()
+{
+    string barcode = bcd.decodeImage(utils::Mat2QImage(TheInputImage)).toStdString();
+    cout<<barcode<<endl;
+    return TheInputImage;
+}

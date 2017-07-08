@@ -2,11 +2,12 @@
 #define DEFS_H
 
 #define ROOT "../"
-#define HAND_MODEL 1
+#define HAND_MODEL 0
 
-#define MAIN_WIDTH 700
-#define MAIN_HEIGHT 550
-
+//#define MAIN_WIDTH 700
+//#define MAIN_HEIGHT 550
+#define MAIN_WIDTH 1024
+#define MAIN_HEIGHT 768
 // ARCapturer.h
 #define IMAGEPATH "/home/heranort/Dev/example/images/"
 #define MARKERNUM 4

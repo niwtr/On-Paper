@@ -24,6 +24,10 @@ private slots:
 
     void on_button_antishake_clicked();
 
+    void on_button_status_norm_clicked();
+
+    void on_button_status_barcode_clicked();
+
 private:
     Ui::OPTestingPanel *ui;
     OnPaper * opptr;

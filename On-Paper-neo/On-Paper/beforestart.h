@@ -3,13 +3,16 @@
 
 #include "opencv2/opencv.hpp"
 #include "defs.h"
-
+#include "glcanvas.h"
 #include <iostream>
+#include "cvutils.h"
+
 
 namespace on_paper {
 
 using namespace std;
 using namespace cv;
+
 
 class BeforeStart
 {
@@ -31,6 +34,7 @@ public:
 private:
     VideoCapture *_vc;
     Mat last_img;
+    GLCanvas G;
 };
 }
 

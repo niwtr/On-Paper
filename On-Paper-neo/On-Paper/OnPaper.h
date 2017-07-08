@@ -17,11 +17,18 @@
 #include "glcanvas.h"
 #include "beforestart.h"
 #include "defs.h"
-
+#include <QZXing.h>
+#include <string>
+using BarCodeDecoder=QZXing;
+using std::string;
 #define elif else if
 
 
 namespace on_paper {
+enum op_status {
+    op_normal,
+    op_barcode,
+};
 class OnPaper {
 
 private:
@@ -39,27 +46,18 @@ public:
     Painter pa;
     //ToolBox tb;
     PaperFun af;
+    BarCodeDecoder bcd;
 public:
     OnPaper(){}
-    void init(void){
-        //TheCameraParameters.readFromXMLFile(string(ROOT) + "camera.yml"); //outdated.
-        TheCameraParameters.readFromXMLFile("./camera.yml");
-        ac.init(TheCameraParameters);
-        const Mat& img = ac.get_image();
-        pa.init(img.rows, img.cols);
-        af.initialize();
-        ac.capture_Painter(&pa);
-        af.capture_Painter(&pa);
-        gm = new GestureManager(&gj);
-    }
-
+    void init(void);
     void train_hand_thrsd();
     void camera_start(void);
     Mat& process_one_frame(void);
 
 private:
     int current_page; //TODO move this "page" to static member of Paperfun?
-
+    Mat& _process_normal(void);
+    Mat& _process_barcode(void);
 public:
 
     int wait_time=1;
@@ -70,6 +68,10 @@ public:
     bool allow_write ;
     bool allow_enlarge ;
     bool allow_triggers ;
+
+
+
+    op_status status;
 };
 
 

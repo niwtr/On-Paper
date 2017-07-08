@@ -8,6 +8,8 @@
     string(": ") +\
     string(this->opptr->allow_ ## name?"ON":"OFF")))
 
+
+
 OPTestingPanel::OPTestingPanel(OnPaper *op, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OPTestingPanel)
@@ -15,9 +17,12 @@ OPTestingPanel::OPTestingPanel(OnPaper *op, QWidget *parent) :
     ui->setupUi(this);
     this->opptr = op;
     ui->button_antishake->setText("Antishake");
+    ui->button_status_norm->setText("Normal Mode");
+    ui->button_status_barcode->setText("Barcode Mode");
     SETTEXT(triggers);
     SETTEXT(enlarge);
     SETTEXT(write);
+
 }
 
 OPTestingPanel::~OPTestingPanel()
@@ -52,3 +57,13 @@ void OPTestingPanel::on_button_antishake_clicked()
 
 #undef TOGGLE_FUNCTION
 #undef SETTEXT
+
+void OPTestingPanel::on_button_status_norm_clicked()
+{
+    opptr->status=op_status::op_normal;
+}
+
+void OPTestingPanel::on_button_status_barcode_clicked()
+{
+    opptr->status=op_status::op_barcode;
+}
