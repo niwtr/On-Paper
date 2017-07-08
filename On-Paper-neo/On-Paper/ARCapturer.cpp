@@ -26,21 +26,6 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
     TheInputImageCopy = Mat::zeros(100,100,CV_8UC1); //FIXME potential bug.
     TheLastMarkers=MDetector.detect(TheInputImageCopy, CamParams, TheMarkerSize);
 
-    //PdfReader.load_pdf("/home/han/test.pdf");
-    PdfReader.load_pdf("/home/heranort/2.pdf");
-    if(PdfReader.render_pdf_page(1))
-        pdf_paper_image=PdfReader.cv_get_pdf_image();
-    else
-        exit(121);//ad-hoc.
-
-
-
-    //pdf_paper_image = imread(string(IMAGEPATH) + "example-"+"1.png");
-    //image = imread(string(IMAGEPATH) + "prince-"+"0.png");
-
-    //image= readPDFtoCV("../rt.pdf", 300);
-    //cvtColor(image, image, CV_BGR2BGRA);
-    // read camera parameters if passed
 
 
     auto&& get_shifted_paper_pattern=[](float ratio_x, float ratio_y, const vector<Point2f> vp2f){
@@ -64,12 +49,8 @@ void on_paper::ARCapturer::init(CameraParameters cp) {
         this->shifted_pattern_paper_source.emplace_back(
                 get_shifted_paper_pattern(s.first, s.second, pattern_paper_source));
 
-    this->original_image_pattern = {
-            Point2f(pdf_paper_image.cols, pdf_paper_image.rows),
-            Point2f(0, pdf_paper_image.rows),
-            Point2f(0, 0),
-            Point2f(pdf_paper_image.cols, 0)
-    };
+
+
     MDetector.setDictionary("ARUCO");
     MDetector.setThresholdParams(7, 7);
     MDetector.setThresholdParamRange(2, 0);
@@ -152,28 +133,24 @@ void on_paper::ARCapturer::map_markers(void) {
             virtual_paper = vector_avg2(virtual_paper, __virtual_paper);
     }
 
+
+    Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
+    pdf_paper_image=pdfread(TheMarkers);
+
+
+
     //把原图投射到虚拟纸张上。
     Mat M = getPerspectiveTransform(original_image_pattern, virtual_paper);
     Mat M_inv = getPerspectiveTransform(virtual_paper, original_image_pattern);
     this->transmatrix_inv = M_inv; //set val to M_inv.
     this->transmatrix = M; // set val to M.
-    Mat transf = Mat::zeros(TheInputImageCopy.size(), CV_8UC4);
-    pdf_paper_image=pdfread(TheMarkers);
 
-
-    this->original_image_pattern = {
-            Point2f(pdf_paper_image.cols, pdf_paper_image.rows),
-            Point2f(0, pdf_paper_image.rows),
-            Point2f(0, 0),
-            Point2f(pdf_paper_image.cols, 0)
-    };
     warpPerspective(pdf_paper_image, transf, M, TheInputImageCopy.size(), cv::INTER_NEAREST);
-    //if(need_white_transparent)
-        utils::white_transparent(transf, transf);
 
+    //if(need_white_transparent)
+       // utils::white_transparent(transf, transf);
 
     VirtualPaperImage = transf;
-
 
 }
 
@@ -241,7 +218,7 @@ cv::Mat on_paper::ARCapturer::imgread(vector<aruco::Marker> marker) {
     if(page!=cur_page)
     {
         picname=string(IMAGEPATH)+"example-"+utils::into_name(page,ZERONUM)+".png";
-        //picname=string(IMAGEPATH)+"prince-"+utils::into_name(page,ZERONUM)+".png";
+
         cout<<picname<<endl;
         img=cv::imread(picname, IMREAD_UNCHANGED);
         cout<<img.channels()<<endl;
@@ -259,6 +236,7 @@ cv::Mat on_paper::ARCapturer::imgread(vector<aruco::Marker> marker) {
     else
         img=pdf_paper_image;
 
+    set_original_paper_pattern();//set the paper pattern to optimize for the actual paper size.
 
 
     return img;
@@ -277,7 +255,7 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker)
         page=id/MARKERNUM +1;
     }
 
-    if(page!=cur_page)
+    if(page!=cur_page && page < PdfReader.get_pagenum())
     {
         PdfReader.render_pdf_page(page);
         need_white_transparent = false;//four channels, horray!
@@ -289,6 +267,27 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker)
         img=pdf_paper_image;
 
     return img;
+}
+
+void on_paper::ARCapturer::read_pdf_archiv(string pdf_file)
+{
+    cout<<pdf_file<<endl;
+    PdfReader.load_pdf(QString::fromStdString(pdf_file));
+    if(not PdfReader.render_pdf_page(0)) // get the page 0.
+        exit(121); //ad hoc
+    pdf_paper_image=PdfReader.cv_get_pdf_image();
+    set_original_paper_pattern();
+    pa_ptr->init(pdf_paper_image.rows, pdf_paper_image.cols);
+}
+
+void on_paper::ARCapturer::set_original_paper_pattern()
+{
+    this->original_image_pattern = {
+            Point2f(pdf_paper_image.cols, pdf_paper_image.rows),
+            Point2f(0, pdf_paper_image.rows),
+            Point2f(0, 0),
+            Point2f(pdf_paper_image.cols, 0)
+    };
 }
 
 

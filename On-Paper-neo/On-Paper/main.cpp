@@ -21,8 +21,6 @@ int main(int argc, char *argv[])
     if(HAND_MODEL)
         op.train_hand_thrsd();   // for hand model 2
 
-
-
     OnPaperMain w(&op, 0);
     OPTestingPanel p(&op, 0);
 

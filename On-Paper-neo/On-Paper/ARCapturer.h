@@ -133,7 +133,8 @@ namespace on_paper {
         }
         void display_enlarged_area(Rect r);
         const int& get_page(){return cur_page;}
-
+        PDFReader& get_PDF_reader(){return this->PdfReader;}
+        void read_pdf_archiv(string pdf_file);
     private:
 
         template<typename vecpf>
@@ -148,6 +149,9 @@ namespace on_paper {
         void fill_markers(void);
         cv::Mat imgread(vector<Marker>); //deprecated.
         cv::Mat pdfread(vector<Marker>);
+
+
+        void set_original_paper_pattern();
 
 
     };

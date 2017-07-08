@@ -47,4 +47,10 @@
 //#define PICTUREPATH ""
 #define ZERONUM 1
 
+
+//archiver.h
+#define ARCHIVE_PREFIX "/home/heranort/onpaper_archiv/"
+#define METAFILE_PATH "/home/heranort/archiv.json"
+
+
 #endif // DEFS_H

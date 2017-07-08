@@ -14,6 +14,7 @@ class PDFReader
 {
 public:
     PDFReader();
+    bool is_loaded(){ return _is_loaded;}
     void load_pdf(QString file_path);
     bool render_pdf_page(int page_num);
     inline QImage& get_pdf_image(){ return image; }
@@ -21,6 +22,7 @@ public:
     void magnification(); //enlarge
     void shrink();
     void move_page(int movex,int movey);
+    int get_pagenum(){return page_nums;}
 private:
     QString pdf_path;
     QSize page_size;
@@ -35,6 +37,7 @@ private:
 
     int imageX;
     int imageY;
+    bool _is_loaded;
 
 
 };

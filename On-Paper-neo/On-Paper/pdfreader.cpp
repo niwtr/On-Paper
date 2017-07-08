@@ -5,11 +5,12 @@ using std::cout;using std::endl;
 
 on_paper::PDFReader::PDFReader()
 {
+    _is_loaded = false;
     pdf_path="";                                    //pdf文件的路径
     page_nums=0;
     magnification_coe=1;                          //放大系数
-    //desk_piX=QApplication::desktop()->physicalDpiX();//所采像素密度
-    //desk_piY=QApplication::desktop()->physicalDpiY();
+   // desk_piX=QApplication::desktop()->physicalDpiX();//所采像素密度
+  // desk_piY=QApplication::desktop()->physicalDpiY();
     desk_piX=300;desk_piY=300;
     imageX=0;                                       //默认pdf渲染图片的位置
     imageY=0;
@@ -28,6 +29,7 @@ void on_paper::PDFReader::load_pdf(QString file_path)
      Poppler::Page* pdfPage = doc->page(0);
      page_size = pdfPage->pageSize();    //per page size
      delete pdfPage;
+     _is_loaded=true;
      return;
 }
 

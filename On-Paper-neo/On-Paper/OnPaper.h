@@ -19,6 +19,7 @@
 #include "defs.h"
 #include <QZXing.h>
 #include <string>
+#include "archiver.h"
 using BarCodeDecoder=QZXing;
 using std::string;
 #define elif else if
@@ -47,7 +48,9 @@ public:
     //ToolBox tb;
     PaperFun af;
     BarCodeDecoder bcd;
+    Archiver axv;
 public:
+
     OnPaper(){}
     void init(void);
     void train_hand_thrsd();

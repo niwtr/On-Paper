@@ -39,13 +39,16 @@ void on_paper::OnPaper::init(){
     status=op_normal;
     TheCameraParameters.readFromXMLFile("./camera.yml");
     ac.init(TheCameraParameters);
-    const Mat& img = ac.get_image();
-    pa.init(img.rows, img.cols);
+    //const Mat& img = ac.get_image();
+    //pa.init(img.rows, img.cols);
     af.initialize();
     ac.capture_Painter(&pa);
     af.capture_Painter(&pa);
     gm = new GestureManager(&gj);
     bcd.setDecoder(BarCodeDecoder::DecoderFormat_EAN_13);
+    axv.set_prefix(ARCHIVE_PREFIX);
+    axv.read_storage_file(METAFILE_PATH);
+
 }
 
 void on_paper::OnPaper::train_hand_thrsd()
@@ -72,14 +75,17 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
 
 cv::Mat &on_paper::OnPaper::_process_normal()
 {
-    try{
+    //try{
+
+        if(not ac.get_PDF_reader().is_loaded()) //no pdf is loaded.
+            //TODO render"scan a book first".
+            return TheInputImage;
+
         ac.input_image(TheInputImage);
 
-
-
         auto mknum = ac.process();//num of markers.
-
-
+        //if(mknum == 0)
+        //    return TheInputImage;
 
         struct Gesture gt = gj.get_gesture(TheInputImage);
         imshow("mask", gj.mask);
@@ -202,15 +208,14 @@ cv::Mat &on_paper::OnPaper::_process_normal()
 
         lm.overlay();
 
-
-
         lm.output(TheProcessedImage);
         putText(TheProcessedImage, anf, Point(0, TheProcessedImage.rows/10*7), CV_FONT_VECTOR0, 5, Scalar(0,255,0), 20,LINE_AA);
 
-    }catch (std::exception &ex)
-    {
-        cout << "Exception :" << ex.what() << endl;
-    }
+   // }
+   //     catch (std::exception &ex)
+   //{
+   //     cout << "Exception :" << ex.what() << endl;
+   // }
     return this->TheProcessedImage;
 
 
@@ -219,6 +224,16 @@ cv::Mat &on_paper::OnPaper::_process_normal()
 cv::Mat &on_paper::OnPaper::_process_barcode()
 {
     string barcode = bcd.decodeImage(utils::Mat2QImage(TheInputImage)).toStdString();
-    cout<<barcode<<endl;
+    if(barcode == "") return TheInputImage;
+
+    archiv_conf aconf;
+    if(axv.query(barcode.substr(0, barcode.size()-1), aconf)) // ok ,got that.
+    {
+        ac.read_pdf_archiv(aconf.pdf_path);
+        this->status = op_normal;
+        //TODO read jsons & images here.
+    }
+
+
     return TheInputImage;
 }
