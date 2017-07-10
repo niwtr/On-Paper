@@ -73,7 +73,7 @@ namespace on_paper {
         void initKF();
         void init(int rows, int cols);
 
-        void init_canvas_of_page(int npage);
+        void init_canvas_of_page(int npage, int canv_height, int canv_width);
 
         void draw_line_simple(Point p, Scalar c);
         //must ensure the transmatrix is not empty first.

@@ -46,7 +46,7 @@ bool on_paper::PDFReader::render_pdf_page(int page_num)
         }
 
         //设置反锯齿化
-        //doc->setRenderHint(Poppler::Document::TextAntialiasing);
+        doc->setRenderHint(Poppler::Document::TextAntialiasing);
         //doc->setRenderHint(Poppler::Document::Antialiasing);
         doc->setRenderBackend((Poppler::Document::RenderBackend)0);//splash
 

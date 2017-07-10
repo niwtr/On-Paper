@@ -139,6 +139,11 @@ void on_paper::ARCapturer::map_markers(void) {
 
 
 
+
+    set_original_paper_pattern();
+
+
+
     //把原图投射到虚拟纸张上。
     Mat M = getPerspectiveTransform(original_image_pattern, virtual_paper);
     Mat M_inv = getPerspectiveTransform(virtual_paper, original_image_pattern);
@@ -199,7 +204,7 @@ void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
 }
 
 //根据marker的值读取相对应的页
-cv::Mat on_paper::ARCapturer::imgread(vector<aruco::Marker> marker) {
+cv::Mat on_paper::ARCapturer::imgread1(vector<aruco::Marker> marker) {
     int id,page;
     string picname;
     cv::Mat img;
@@ -231,12 +236,13 @@ cv::Mat on_paper::ARCapturer::imgread(vector<aruco::Marker> marker) {
         }
         cout<<img.rows<<" " <<img.cols<<endl;
         cur_page=page;
-        pa_ptr->init_canvas_of_page(cur_page);
+        pa_ptr->init_canvas_of_page(cur_page, img.rows, img.cols);
     }
     else
         img=pdf_paper_image;
 
-    set_original_paper_pattern();//set the paper pattern to optimize for the actual paper size.
+
+    //set_original_paper_pattern();//set the paper pattern to optimize for the actual paper size.
 
 
     return img;
@@ -258,10 +264,11 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker)
     if(page!=cur_page && page < PdfReader.get_pagenum())
     {
         PdfReader.render_pdf_page(page);
-        need_white_transparent = false;//four channels, horray!
+        need_white_transparent = false;
         cur_page=page;
         img=PdfReader.cv_get_pdf_image();
-        pa_ptr->init_canvas_of_page(cur_page);
+        utils::white_transparent(img, img);            //outch!!!
+        pa_ptr->init_canvas_of_page(cur_page,img.rows, img.cols);
     }
     else
         img=pdf_paper_image;
@@ -278,6 +285,7 @@ void on_paper::ARCapturer::read_pdf_archiv(string pdf_file)
     pdf_paper_image=PdfReader.cv_get_pdf_image();
     set_original_paper_pattern();
     pa_ptr->init(pdf_paper_image.rows, pdf_paper_image.cols);
+
 }
 
 void on_paper::ARCapturer::set_original_paper_pattern()

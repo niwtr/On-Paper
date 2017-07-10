@@ -51,11 +51,19 @@ void on_paper::Painter::init(int rows, int cols) {
     this->temp_canvas = __empty.clone();
     initKF();
 }
-void on_paper::Painter::init_canvas_of_page(int npage){
+
+
+//TODO merge thisone with init.
+void on_paper::Painter::init_canvas_of_page(int npage, int canv_height, int canv_width){
     auto it = canvas_container.find(npage);
     if(it == canvas_container.end()) {//init new
         Mat newcanvas = Mat::zeros(canv_height, canv_width, CV_8UC3);
         this->canvas = newcanvas;
+        this->canv_height=canv_height;
+        this->canv_width=canv_width;
+        this->__empty = Mat::zeros(canv_height, canv_width, CV_8UC3);
+        this->temp_canvas=__empty.clone();
+
         this->canvas_container.insert(make_pair<int, Mat>(move(npage), move(newcanvas)));
     } else
         this->canvas = it->second;

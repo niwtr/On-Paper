@@ -125,7 +125,6 @@ cv::Mat &on_paper::OnPaper::_process_normal()
         if(current_page!=ac.get_page())
         {
             current_page=ac.get_page();
-            af.init(current_page);
         }
 
         // let pa to rock.
@@ -140,7 +139,7 @@ cv::Mat &on_paper::OnPaper::_process_normal()
             if(allow_triggers) {
                 Mat _pic;
                 Point p;
-                af.fire_event(finger_tips, p);
+                af.fire_event(finger_tips, p, current_page);
             }
 
             if(gm->get_state() == GMState::INACTION)
@@ -230,10 +229,8 @@ cv::Mat &on_paper::OnPaper::_process_barcode()
     if(axv.query(barcode.substr(0, barcode.size()-1), aconf)) // ok ,got that.
     {
         ac.read_pdf_archiv(aconf.pdf_path);
+        af.load_archiv_conf(aconf);
         this->status = op_normal;
-        //TODO read jsons & images here.
     }
-
-
     return TheInputImage;
 }

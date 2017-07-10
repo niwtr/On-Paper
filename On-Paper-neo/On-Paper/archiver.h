@@ -17,7 +17,7 @@ struct archiv_conf {
     string codenum;
     string pdf_path;
     string conf_path;
-
+    string source_path;
 };
 using _Hash = std::unordered_map<string,archiv_conf>;
 class Archiver {

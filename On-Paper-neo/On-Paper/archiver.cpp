@@ -21,9 +21,8 @@ void on_paper::Archiver::read_storage_file(std::string json_file_path){
         while(true){
             json j; ifs>>j;
             string name=j["name"].get<string>(), type=j["type"].get<string>(), code=j["code"].get<string>(),
-                    image=_prefix+j["image"].get<string>(),conf=_prefix+j["conf"].get<string>();
-            archiv_conf ac{name,type,code,image,conf};
-            cout<<image<<endl;
+                    image=_prefix+j["image"].get<string>(),conf=_prefix+j["conf"].get<string>(),src=_prefix+j["src"].get<string>()+"/";
+            archiv_conf ac{name,type,code,image,conf,src};
             _hash.insert(make_pair(code, ac));
             suc_count++;
         }

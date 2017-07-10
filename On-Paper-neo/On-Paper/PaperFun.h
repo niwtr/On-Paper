@@ -18,6 +18,7 @@
 #include <functional>
 #include <unordered_map>
 #include "defs.h"
+#include "archiver.h"
 
 namespace on_paper
 {
@@ -43,7 +44,7 @@ namespace on_paper
         Mat transmatrix;
     private:
         Painter * pa_ptr;
-        vector<Info> json_parse;
+        map<int,vector<Info>> json_parse;
         Mat picture;
         json j;
         using functor = function<void(Info)>;
@@ -51,14 +52,14 @@ namespace on_paper
     public:
         //at the very start...
         void initialize(void){
-            pic_path = "";
+            pic_name = "";
             register_callbacks();
         }
         //at each time the page changes.
-        void init(int page);
+        void load_archiv_conf(archiv_conf acnf); // init the whole book.
         inline void capture_Painter(Painter * pa){this->pa_ptr = pa;}
         void register_callbacks(void);
-        void fire_event(vector<Point> figPs, Point &);
+        void fire_event(vector<Point> figPs, Point &, int page);
         void call_paper_fun(string function_name, Info arg);
 
     private:
@@ -67,11 +68,11 @@ namespace on_paper
         bool judgeIn(Point p,Point tl,Point br);
 
     private://func storage.
-        string pic_path;
+        string pic_name; // the picture path.
+        archiv_conf aconf; //configure information of archiv.
+
 
     };
+
 }
-
-
-
 #endif //AR_MASK_APPENDEDFUN_H
