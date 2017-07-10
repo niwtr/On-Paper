@@ -11,9 +11,12 @@
 #include <sys/time.h>
 #include <QImage>
 #include <QDebug>
+#include <iostream>
+
 namespace on_paper{
     using namespace std;
     using namespace cv;
+    using std::cout;using std::endl;
     class utils {
     public:
         constexpr const static float PI = 3.14;

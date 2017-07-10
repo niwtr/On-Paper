@@ -1,0 +1,24 @@
+{
+    "code": "100000000001",
+    "conf": "palette.json",
+    "image": "palette.pdf",
+    "name": "palette",
+    "type": "special",
+    "src": "palette"
+}
+{
+    "code": "100000000002",
+    "conf": "toolbox.json",
+    "image": "toolbox.pdf",
+    "name": "toolbox",
+    "type": "special",
+    "src": "toolbox"
+}
+{
+    "code": "200000000001",
+    "conf": "tlp.json",
+    "image": "tlp.pdf",
+    "name": "The Little Prince",
+    "type": "book",
+    "src": "tlp"
+}

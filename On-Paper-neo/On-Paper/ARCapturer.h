@@ -147,7 +147,7 @@ namespace on_paper {
         cv::Mat resize(const cv::Mat &in,int width);
         void anti_shake(void);
         void fill_markers(void);
-        cv::Mat imgread1(vector<Marker>); //deprecated.
+
         cv::Mat pdfread(vector<Marker>);
 
 

@@ -203,50 +203,6 @@ void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
     }
 }
 
-//根据marker的值读取相对应的页
-cv::Mat on_paper::ARCapturer::imgread1(vector<aruco::Marker> marker) {
-    int id,page;
-    string picname;
-    cv::Mat img;
-    for (unsigned int i=0;i<marker.size();i++)
-    {
-        id=marker[i].id;
-        if(id > special_page_start)//special
-        {
-            page = id;
-        } else {
-            page = id / MARKERNUM + 1;
-            //page = id / MARKERNUM ;
-        }
-    }
-
-    if(page!=cur_page)
-    {
-        picname=string(IMAGEPATH)+"example-"+utils::into_name(page,ZERONUM)+".png";
-
-        cout<<picname<<endl;
-        img=cv::imread(picname, IMREAD_UNCHANGED);
-        cout<<img.channels()<<endl;
-        if(img.channels() == 4) {
-            need_white_transparent = false;
-            cvtColor(img, img, CV_BGRA2RGBA);
-        } else {
-
-            need_white_transparent = true;
-        }
-        cout<<img.rows<<" " <<img.cols<<endl;
-        cur_page=page;
-        pa_ptr->init_canvas_of_page(cur_page, img.rows, img.cols);
-    }
-    else
-        img=pdf_paper_image;
-
-
-    //set_original_paper_pattern();//set the paper pattern to optimize for the actual paper size.
-
-
-    return img;
-}
 
 cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker)
 {
@@ -283,6 +239,7 @@ void on_paper::ARCapturer::read_pdf_archiv(string pdf_file)
     if(not PdfReader.render_pdf_page(0)) // get the page 0.
         exit(121); //ad hoc
     pdf_paper_image=PdfReader.cv_get_pdf_image();
+
     set_original_paper_pattern();
     pa_ptr->init(pdf_paper_image.rows, pdf_paper_image.cols);
 

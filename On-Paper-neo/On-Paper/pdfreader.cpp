@@ -1,6 +1,8 @@
 #include "pdfreader.h"
 #include "cvutils.h"
 #include <iostream>
+#include <QPainter>
+
 using std::cout;using std::endl;
 
 on_paper::PDFReader::PDFReader()
@@ -45,10 +47,12 @@ bool on_paper::PDFReader::render_pdf_page(int page_num)
             return false;
         }
 
-        //设置反锯齿化
+        //设置反锯齿化 and transparent
+        //doc->setPaperColor(Qt::transparent);
         doc->setRenderHint(Poppler::Document::TextAntialiasing);
         //doc->setRenderHint(Poppler::Document::Antialiasing);
         doc->setRenderBackend((Poppler::Document::RenderBackend)0);//splash
+        //doc->setRenderBackend(Poppler::Document::ArthurBackend);
 
         //获取页码相应的pdf
         Poppler::Page* pdfPage = doc->page(page_num);
@@ -59,6 +63,7 @@ bool on_paper::PDFReader::render_pdf_page(int page_num)
 
         //生成pdf渲染图像
         image = pdfPage->renderToImage(desk_piX*magnification_coe, desk_piY*magnification_coe, -1, -1, -1, -1) ;
+
         // after the usage, the page must be deleted
         delete pdfPage;
 
