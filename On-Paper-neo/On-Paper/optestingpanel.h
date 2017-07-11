@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "OnPaper.h"
+#include <string>
 namespace Ui {
 class OPTestingPanel;
 }
@@ -27,6 +28,9 @@ private slots:
     void on_button_status_norm_clicked();
 
     void on_button_status_barcode_clicked();
+
+
+    void on_button_help_clicked();
 
 private:
     Ui::OPTestingPanel *ui;

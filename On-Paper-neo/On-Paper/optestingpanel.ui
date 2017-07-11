@@ -14,22 +14,8 @@
    <string>TestingPanel</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="3" column="0">
-    <widget class="QPushButton" name="button_write">
-     <property name="text">
-      <string>PushButton</string>
-     </property>
-    </widget>
-   </item>
    <item row="7" column="0">
     <widget class="QPushButton" name="button_triggers">
-     <property name="text">
-      <string>PushButton</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QPushButton" name="button_enlarge">
      <property name="text">
       <string>PushButton</string>
      </property>
@@ -51,6 +37,20 @@
    </item>
    <item row="0" column="0">
     <widget class="QPushButton" name="button_status_barcode">
+     <property name="text">
+      <string>PushButton</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="button_write">
+     <property name="text">
+      <string>PushButton</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QPushButton" name="button_enlarge">
      <property name="text">
       <string>PushButton</string>
      </property>

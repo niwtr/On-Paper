@@ -120,6 +120,11 @@ void on_paper::Painter::kalman_trace(Point p, bool drawp) {
     last_point =statePt;
 }
 
+void on_paper::Painter::kalman_fix(cv::Point p)
+{
+    for(int i = 0;i<30;i++) kalman_trace(p, false);
+}
+
 
 
 
@@ -161,6 +166,9 @@ void on_paper::Painter::paste_temp_pic(Mat pic, Point center)
     //utils::white_transparent(pic,pic);
 
     warpPerspective(pic,temp_canvas,transf,temp_canvas.size(),INTER_NEAREST);
+
+    draw_rect(Rect(tl,br), Scalar(255,255,255), 14);
+
 }
 
 
@@ -205,6 +213,3 @@ void on_paper::Painter::draw_finger_tips(std::vector<Point> fingers, int size, c
     }
 }
 
-void on_paper::Painter::text_broadcast(string str) {
-    putText(temp_canvas, str, Point(0, temp_canvas.rows/10*9), CV_FONT_VECTOR0, 5, Scalar(0,255,0), 20,LINE_AA);
-};

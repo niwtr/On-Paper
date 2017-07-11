@@ -57,6 +57,7 @@ namespace on_paper {
     public:
         Point last_point;
         Mat measurement_KF;
+        string msg;
 
 
         Mat transmatrix ; //matrix for transforming lines to original image.
@@ -84,14 +85,16 @@ namespace on_paper {
         Point kalman_smooth(const Point &p);
 
         void kalman_trace(Point p, bool drawp);
+        void kalman_fix(Point p);
         void clear_canvas(void);
 
         //on temp
         void paste_temp_pic(Mat pic, Point center);
         inline void draw_enlarged_rect(Rect r){ rectangle(temp_canvas, r, Scalar(0,255,255), 14); }
+        inline void draw_rect(Rect r, Scalar color, int thick){rectangle(temp_canvas, r, color, thick);}
 
         void draw_finger_tips(vector<Point> fingers, int size, Scalar c);
-        void text_broadcast(string str);
+
     };
 }
 

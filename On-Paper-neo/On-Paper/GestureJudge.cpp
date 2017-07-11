@@ -38,6 +38,7 @@ struct on_paper::Gesture on_paper::GestureJudge::get_gesture(const cv::Mat& src)
 }
 on_paper::GestureManager::GestureManager(on_paper::GestureJudge *gj)
 {
+
     this->judge=gj;
     this->state=NOHAND;
     this->last_action_time=utils::curtime_msec();
@@ -55,7 +56,7 @@ on_paper::GestureType on_paper::GestureManager::get_uber_gesture(on_paper::Gestu
     else
         return on_gesture_changed(thisGT);
 }
-
+#define UPDATE_PERCENTAGE(X) percentage=(int)((double)accumulated_time / (double)X * (double) 100)
 on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
 {
     GestureType judgedGT = last_gesture; // return val.
@@ -74,10 +75,15 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             goto exit_abnormal;
 
         case NONE:
+            msg="Place your hand here.";
             goto exit; //unchanged, for everything.
         case MOVE:
 
             //migrate to RECOG?
+
+            msg="Recognizing hands ...";
+            UPDATE_PERCENTAGE(10);
+
             if(accumulated_time > 10){ // 10 frames
                //ja!
                 state=RECOGREADY;
@@ -87,11 +93,13 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
         }
 
      case RECOGREADY:
+        msg="Recognizing gesture ...";
         switch(last_gesture){
         case ENLARGE:
         case PRESS:
         case MOVE:
 
+            UPDATE_PERCENTAGE(10);
             if(accumulated_time > 10){ //10 frames
                 state=INACTION;
                 accumulated_time = 0;
@@ -101,6 +109,7 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
 
         case NONE:
 
+            UPDATE_PERCENTAGE(4);
             if (accumulated_time > 4){
                 state = NOHAND;
                 accumulated_time = 0;
@@ -109,10 +118,12 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
 
         }
      case ACTIONPAUSE:
+        msg="Action paused.";
         switch(last_gesture){
         case ENLARGE:
             goto exit; //unhandled.
         case PRESS:
+            UPDATE_PERCENTAGE(5);
             if(accumulated_time > 5){
                 state=INACTION;
                 accumulated_time=0;
@@ -120,12 +131,14 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             }
             goto exit;
         case MOVE:
+            UPDATE_PERCENTAGE(5);
             if(accumulated_time > 5){
                 state=RECOGREADY;
                 accumulated_time = 0;
             }
             goto exit;
         case NONE:
+            UPDATE_PERCENTAGE(5);
             if(accumulated_time > 5){
                 state=NOHAND;
                 accumulated_time=0;
@@ -134,6 +147,7 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
         }
 
      case INACTION:
+        msg="In action.";
         switch(last_gesture){
         case PRESS:
         case ENLARGE:
@@ -144,7 +158,7 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             this->action_gesture_changed = false;
 
             if(last_gesture != stored_gesture){
-
+                UPDATE_PERCENTAGE(3);
                 //this time we should consider the acc time.
                 if(accumulated_time > 3){ // 5 frames
                     // state is unchaged, for 5 frames.
@@ -162,6 +176,7 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             goto  exit;
         case NONE:
 
+            UPDATE_PERCENTAGE(4);
             // this is not possibly happen.
             if(accumulated_time > 4) //4 frames
             {

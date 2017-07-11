@@ -60,6 +60,9 @@ namespace on_paper {
         GestureType stored_gesture;
         long last_action_time; // last time for action
         long accumulated_time;
+        int percentage;
+        string msg;
+
 
 
     public: // public methods
@@ -69,6 +72,8 @@ namespace on_paper {
         GestureType get_uber_gesture(GestureType gt); // revised gesture.
         GMState get_state(){ return this->state; }
         bool action_gesture_changed;
+        int get_progress_percentage(){return this->percentage;}
+        string get_progress_message(){return this->msg;}
 
     private: //private methods
         GestureType on_gesture_unchanged();

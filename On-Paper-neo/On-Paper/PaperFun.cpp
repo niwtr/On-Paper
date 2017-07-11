@@ -81,14 +81,8 @@ void on_paper::PaperFun::transform_point(Point& p){
 
 void on_paper::PaperFun::fire_event(vector<Point> figPs, Point &figP,int page) {
 
+    msg="NIL";
     figP=Point(0,0);
-    vector<Info> x_info;
-    x_info=json_parse[page];
-
-    //for(vector<Info>::iterator iter=x_info.begin();iter!=x_info.end();iter++)
-    //{
-    //    cout<<iter->tl<<iter->br<<endl;
-    //}
 
     if(!j.empty())
     {
@@ -106,8 +100,8 @@ void on_paper::PaperFun::fire_event(vector<Point> figPs, Point &figP,int page) {
                 trans_tl=pixtransform(iter->tl);
                 trans_br=pixtransform(iter->br);
 
-                pa_ptr->draw_enlarged_rect(Rect(trans_tl, trans_br));
-
+                //pa_ptr->draw_enlarged_rect(Rect(trans_tl, trans_br));
+                pa_ptr->draw_rect(Rect(trans_tl, trans_br), Scalar(0,0,255), 4);
                 if(judgeIn(figP,trans_tl, trans_br))
                 {
                     string function = iter->function;
@@ -121,6 +115,13 @@ void on_paper::PaperFun::fire_event(vector<Point> figPs, Point &figP,int page) {
         }
     }
 
+}
+
+bool on_paper::PaperFun::contains_triggers(int page)
+{
+    vector<Info> v_info;
+    v_info=json_parse[page];
+    return (not v_info.empty());
 }
 
 
@@ -163,7 +164,7 @@ void on_paper::PaperFun::register_callbacks(void) {
                     picture=resizedPic;
                 }
                 pa_ptr->paste_temp_pic(picture, i.finger);
-                pa_ptr->text_broadcast("Displaying elements.");
+                msg="Found secret area.";
             }
     ));
     this->_fnmap.insert(make_pair<string, functor>(
@@ -177,7 +178,7 @@ void on_paper::PaperFun::register_callbacks(void) {
                 getline(ss,_r,',');
                 b = atoi(_b.data());g=atoi(_g.data());r=atoi(_r.data());
                 pa_ptr->set_color(Scalar(b,g,r));
-                pa_ptr->text_broadcast("Picked up color.");
+                msg="Picked up color."     ;
             }
     ));
     this->_fnmap.insert(make_pair<string, functor>(
@@ -187,12 +188,12 @@ void on_paper::PaperFun::register_callbacks(void) {
                 if(tool == "pencil") {
                     pa_ptr->set_color(Scalar(255, 255, 255));
                     pa_ptr->set_pen_size(10);
-                    pa_ptr->text_broadcast("Picked up pencil.");
+                    msg="Picked up pencil.";
                 }
                 else if(tool == "eraser") {
                     pa_ptr->set_color(Scalar(0, 0, 0));
                     pa_ptr->set_pen_size(200);
-                    pa_ptr->text_broadcast("Picked up eraser.");
+                    msg="Picked up eraser.";
                 } else {
                     cout<<"Not implemented."<<endl;
                 }
@@ -204,7 +205,7 @@ void on_paper::PaperFun::register_callbacks(void) {
             [&](Info i){
                 auto width = i.data;
                 pa_ptr->set_pen_size(atoi(width.data()));
-                pa_ptr->text_broadcast("Renewed pen size.");
+                msg="Renewed pen size.";
             }
     ));
 

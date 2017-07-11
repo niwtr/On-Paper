@@ -241,6 +241,7 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker)
         img=PdfReader.cv_get_pdf_image();
 
         pa_ptr->init_canvas_of_page(cur_page,img.rows, img.cols);
+        pa_ptr->initKF();//re-init the kalman filter.
     }
     else
         img=pdf_paper_image;

@@ -19,11 +19,16 @@ OPTestingPanel::OPTestingPanel(OnPaper *op, QWidget *parent) :
     ui->button_antishake->setText("Antishake");
     ui->button_status_norm->setText("Normal Mode");
     ui->button_status_barcode->setText("Barcode Mode");
+
     SETTEXT(triggers);
     SETTEXT(enlarge);
     SETTEXT(write);
-  opptr->ac.toggle_anti_shake(); // FIXME!!
-     opptr->status=op_status::op_barcode;//FIXME!!
+    opptr->ac.toggle_anti_shake(); // FIXME!!
+
+
+    opptr->status=op_status::op_barcode;//FIXME!!
+    opptr->allow_triggers=true;//FIXME!!
+
 }
 
 OPTestingPanel::~OPTestingPanel()
@@ -67,4 +72,11 @@ void OPTestingPanel::on_button_status_norm_clicked()
 void OPTestingPanel::on_button_status_barcode_clicked()
 {
     opptr->status=op_status::op_barcode;
+}
+
+
+
+void OPTestingPanel::on_button_help_clicked()
+{
+
 }

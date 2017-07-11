@@ -49,6 +49,7 @@ namespace on_paper
         map<int,vector<Info>> json_parse;
         Mat picture;
         json j;
+        string msg ; //text broadcast.
         using functor = function<void(Info)>;
         unordered_map<string, functor> _fnmap;
     public:
@@ -63,8 +64,10 @@ namespace on_paper
         inline void capture_Painter(Painter * pa){this->pa_ptr = pa;}
         void register_callbacks(void);
         void fire_event(vector<Point> figPs, Point &, int page);
+        bool contains_triggers(int page);
         void call_paper_fun(string function_name, Info arg);
         Point pixtransform(Point & p);
+        string get_message(){return msg;}
 
     private:
         void parseJson();

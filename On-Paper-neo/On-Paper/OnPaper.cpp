@@ -37,6 +37,7 @@ void on_paper::OnPaper::camera_start()
 // must after camera_start triggered
 void on_paper::OnPaper::init(){
     status=op_normal;
+
     TheCameraParameters.readFromXMLFile("./camera.yml");
     ac.init(TheCameraParameters);
 
@@ -64,26 +65,48 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
 
         //get input image!!!
     TheVideoCapturer>>TheInputImage;
-    if(status == op_normal)
+    if(status == op_normal){
         return _process_normal();
-    else
-        return _process_barcode();
+    }
+    else{
 
+        warg._string="Scanning codebar ...";
+        wcall("msg", warg);
+        return _process_barcode();
+    }
 
 }
 
+void on_paper::OnPaper::register_callback(string cbname, w_callback cb)
+{
+    this->callbacks.insert(std::make_pair(cbname, cb));
+}
+
+void on_paper::OnPaper::wcall(string cbname, __w_callback_arg arg)
+{
+    auto it = this->callbacks.find(cbname);
+    if(it != callbacks.end()){
+        it->second(arg);
+    }
+}
+
+
 cv::Mat &on_paper::OnPaper::_process_normal()
 {
+
     try{
+
 
         if(not ac.get_PDF_reader().is_loaded()) //no pdf is loaded.
             //TODO render"scan a book first".
             return TheInputImage;
 
+
         ac.input_image(TheInputImage);
 
         auto mknum = ac.process();//num of markers.
 
+        if(mknum == 0) return TheInputImage;
 
         struct Gesture gt = gj.get_gesture(TheInputImage);
         imshow("mask", gj.mask);
@@ -100,23 +123,35 @@ cv::Mat &on_paper::OnPaper::_process_normal()
 */
         gt.type = gm->get_uber_gesture(gt.type); // let gm to rock.
 
+        string wmsg=gm->get_progress_message();
+        //if(wmsg=="")wmsg="Place your hand here.";
+        int wpercent=gm->get_progress_percentage();
+        warg._string=wmsg;warg._int=wpercent;
 
-        string anf;
+        wcall("msg", warg);
+        wcall("prog", warg);
+
+
+/*
+        string wmsg;
         switch(gm->get_state()){
         case NOHAND:
-            anf="NOHAND";
+            wmsg="Place your hands here.";
             break;
         case INACTION:
-            anf="INACTION";
+            wmsg="In action.";
             break;
         case RECOGREADY:
-            anf="RECOGREADY";
+            wmsg="Recognizing gesture ...";
             break;
         case ACTIONPAUSE:
-            anf="ACTIONPause";
+            wmsg="Action paused.";
             break;
         }
 
+        warg._string=wmsg;
+        wcall("msg", warg);
+*/
 
         auto finger_tips=vector<Point>{Point(0,0)};
 
@@ -127,6 +162,11 @@ cv::Mat &on_paper::OnPaper::_process_normal()
         {
             current_page=ac.get_page();
         }
+
+        if(af.contains_triggers(current_page))
+            allow_write=false;
+        else
+            allow_write=true;
 
         // let pa to rock.
         if(mknum > 0) //detected markers!
@@ -141,27 +181,32 @@ cv::Mat &on_paper::OnPaper::_process_normal()
                 Mat _pic;
                 Point p;
                 af.fire_event(finger_tips, p, current_page);
+                if(af.get_message() != "NIL") //modified.
+                    warg._string=af.get_message();
+                wcall("msg", warg);
             }
 
-            if(gm->get_state() == GMState::INACTION)
+
+            GMState current_state = gm->get_state();
+
+            if(current_state == GMState::INACTION)
             {
+
                 if(gt.type == GestureType::PRESS) {
+                    if(last_state ==GMState::RECOGREADY)
+                        pa.kalman_fix(finger_tips[0]);
                     pa.draw_finger_tips(finger_tips, pa.get_pen_size(), pa.get_color());
 
                     if(gm->action_gesture_changed) //changed, trace first.
                     {
-                        //进行三十次卡尔曼追踪使得划线的光标回归手指。
-                        //注意30次只是经验。
-                        for(int i = 0;i<30;i++)
-                            pa.kalman_trace(finger_tips[0], false);
+                        //make kalman trace return to the finger.
+                        pa.kalman_fix(finger_tips[0]);
                         if(allow_write) {
                             pa.kalman_trace(finger_tips[0], true); //trace and draw
-                            pa.text_broadcast("Writing.");
                         }
                     } else { // just write
                         if(allow_write) {
                             pa.kalman_trace(finger_tips[0], true);
-                            pa.text_broadcast("Writing.");
                         }
                     }
                 }
@@ -173,7 +218,7 @@ cv::Mat &on_paper::OnPaper::_process_normal()
 
                 elif(gt.type == GestureType::ENLARGE)
                 {
-                    pa.kalman_trace(finger_tips[0], false);
+                    pa.kalman_trace(finger_tips[0], false); //follow the fingers.
                     Mat _image = ac.get_image();
                     vector<Point> vp = finger_tips;
                     for(auto & p : vp)
@@ -184,15 +229,14 @@ cv::Mat &on_paper::OnPaper::_process_normal()
                     int xsmaller = p1.x<p2.x? p1.x:p2.x;
                     int ysmaller = p1.y<p2.y? p1.y:p2.y;
                     auto rw = abs(p1.x-p2.x), rh = (int)((float)rw/640*480);
-                    if(rw > 500 and allow_enlarge){ //如果窗口太小就不管了。
+                    if(rw > 200 and allow_enlarge){ //如果窗口太小就不管了。
                         Rect r = Rect(xsmaller, ysmaller, rw, rh);
                         pa.draw_enlarged_rect(r);
                         ac.display_enlarged_area(r);
-                        pa.text_broadcast("Enlarge.");
-
                     }
                 }
             }
+            last_state = current_state;
 
             pa.transform_canvas(ac.get_transmatrix(), TheInputImage.size());
 
@@ -210,7 +254,7 @@ cv::Mat &on_paper::OnPaper::_process_normal()
         lm.overlay();
 
         lm.output(TheProcessedImage);
-        putText(TheProcessedImage, anf, Point(0, TheProcessedImage.rows/10*7), CV_FONT_VECTOR0, 5, Scalar(0,255,0), 20,LINE_AA);
+        //putText(TheProcessedImage, anf, Point(0, TheProcessedImage.rows/10*7), CV_FONT_VECTOR0, 5, Scalar(0,255,0), 20,LINE_AA);
 
     }
         catch (std::exception &ex)
@@ -224,6 +268,8 @@ cv::Mat &on_paper::OnPaper::_process_normal()
 
 cv::Mat &on_paper::OnPaper::_process_barcode()
 {
+
+
     string barcode = bcd.decodeImage(utils::Mat2QImage(TheInputImage)).toStdString();
     if(barcode == "") return TheInputImage;
 
@@ -236,6 +282,14 @@ cv::Mat &on_paper::OnPaper::_process_barcode()
         af.load_archiv_conf(aconf);
         this->status = op_normal;
         //this->last_good_barcode = barcode;
+        warg._string="Scanning markers ...";
+        wcall("msg", warg);
+
+        if(aconf.type=="special")
+            allow_enlarge=false;
+        else
+            allow_enlarge=true;
+
     }
     return TheInputImage;
 }
