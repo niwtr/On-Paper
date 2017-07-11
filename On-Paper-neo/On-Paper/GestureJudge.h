@@ -49,6 +49,7 @@ namespace on_paper {
         NOHAND,
         RECOGREADY,
         INACTION,
+        ACTIONPAUSE
     };
 
  class GestureManager {

@@ -22,7 +22,8 @@ OPTestingPanel::OPTestingPanel(OnPaper *op, QWidget *parent) :
     SETTEXT(triggers);
     SETTEXT(enlarge);
     SETTEXT(write);
-
+  opptr->ac.toggle_anti_shake(); // FIXME!!
+     opptr->status=op_status::op_barcode;//FIXME!!
 }
 
 OPTestingPanel::~OPTestingPanel()

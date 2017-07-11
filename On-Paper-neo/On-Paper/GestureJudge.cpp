@@ -108,6 +108,31 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             goto exit;
 
         }
+     case ACTIONPAUSE:
+        switch(last_gesture){
+        case ENLARGE:
+            goto exit; //unhandled.
+        case PRESS:
+            if(accumulated_time > 5){
+                state=INACTION;
+                accumulated_time=0;
+                stored_gesture = last_gesture;
+            }
+            goto exit;
+        case MOVE:
+            if(accumulated_time > 5){
+                state=RECOGREADY;
+                accumulated_time = 0;
+            }
+            goto exit;
+        case NONE:
+            if(accumulated_time > 5){
+                state=NOHAND;
+                accumulated_time=0;
+            }
+            goto exit;
+        }
+
      case INACTION:
         switch(last_gesture){
         case PRESS:
@@ -121,10 +146,13 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
             if(last_gesture != stored_gesture){
 
                 //this time we should consider the acc time.
-                if(accumulated_time > 5){ // 5 frames
-                    // state is unchaged.
+                if(accumulated_time > 3){ // 5 frames
+                    // state is unchaged, for 5 frames.
                     accumulated_time = 0;
-                    state=RECOGREADY;
+                    if(stored_gesture == PRESS)
+                        state=ACTIONPAUSE;
+                    else
+                        state=RECOGREADY;
                     this->action_gesture_changed = true;
                 }
             }
@@ -152,8 +180,10 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_unchanged()
 
 }
 
+// the accumulating proc of gm.
 on_paper::GestureType on_paper::GestureManager::on_gesture_changed(on_paper::GestureType changedTo)
 {
+
     GestureType judgedGT = changedTo;
 
     switch(state){
@@ -196,6 +226,17 @@ on_paper::GestureType on_paper::GestureManager::on_gesture_changed(on_paper::Ges
             accumulated_time = 0;
             last_gesture = changedTo;
             judgedGT = changedTo;
+            goto exit;
+        }
+    case GMState::ACTIONPAUSE:
+        switch(changedTo){
+            case MOVE:
+            case NONE:
+            case PRESS:
+            accumulated_time=0;
+            last_gesture=changedTo;
+            goto exit;
+        case ENLARGE:
             goto exit;
         }
     }

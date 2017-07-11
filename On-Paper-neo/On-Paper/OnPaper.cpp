@@ -9,8 +9,8 @@ void on_paper::OnPaper::camera_start()
 {
     TheVideoCapturer.open(0);
 
-    TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, 1024);
-    TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, 768);
+    TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, MAIN_WIDTH);
+    TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, MAIN_HEIGHT);
 
 
     if (!TheVideoCapturer.isOpened())  throw std::runtime_error("Could not open video");
@@ -83,13 +83,12 @@ cv::Mat &on_paper::OnPaper::_process_normal()
         ac.input_image(TheInputImage);
 
         auto mknum = ac.process();//num of markers.
-        //if(mknum == 0)
-        //    return TheInputImage;
+
 
         struct Gesture gt = gj.get_gesture(TheInputImage);
         imshow("mask", gj.mask);
-
 /*
+
         if(gt.type==GestureType::NONE)
             cout<<"NONE"<<endl;
         if(gt.type==GestureType::ENLARGE)
@@ -112,6 +111,9 @@ cv::Mat &on_paper::OnPaper::_process_normal()
             break;
         case RECOGREADY:
             anf="RECOGREADY";
+            break;
+        case ACTIONPAUSE:
+            anf="ACTIONPause";
             break;
         }
 
@@ -226,11 +228,14 @@ cv::Mat &on_paper::OnPaper::_process_barcode()
     if(barcode == "") return TheInputImage;
 
     archiv_conf aconf;
-    if(axv.query(barcode.substr(0, barcode.size()-1), aconf)) // ok ,got that.
+    barcode=barcode.substr(0, barcode.size()-1);
+    //if(barcode != last_good_barcode)
+    if(axv.query(barcode, aconf)) // ok ,got that, this is a good barcode.
     {
         ac.read_pdf_archiv(aconf.pdf_path);
         af.load_archiv_conf(aconf);
         this->status = op_normal;
+        //this->last_good_barcode = barcode;
     }
     return TheInputImage;
 }

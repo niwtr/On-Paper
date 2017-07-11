@@ -38,6 +38,7 @@ private:
     Mat TheInputImage;
     Mat TheProcessedImage;
     BeforeStart bs;
+    string last_good_barcode;
 
 public:
     ARCapturer ac;

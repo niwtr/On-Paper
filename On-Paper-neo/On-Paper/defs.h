@@ -6,8 +6,8 @@
 
 //#define MAIN_WIDTH 700
 //#define MAIN_HEIGHT 550
-#define MAIN_WIDTH 1024
-#define MAIN_HEIGHT 768
+#define MAIN_WIDTH 1280//1024
+#define MAIN_HEIGHT 800//768
 // ARCapturer.h
 #define IMAGEPATH "/home/heranort/Dev/example/images/"
 #define MARKERNUM 4
