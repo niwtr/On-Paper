@@ -145,7 +145,7 @@ int on_paper::HandDetector::biggest_contour(std::vector<std::vector<cv::Point> >
 {
 	int idx = 0;
 	int area = 0;
-	for (int i = 0; i < contours.size(); i++) {
+    for (unsigned int i = 0; i < contours.size(); i++) {
 		double tmp_area = contourArea(contours[i]);
 		if (tmp_area > area) {
 			area = tmp_area;

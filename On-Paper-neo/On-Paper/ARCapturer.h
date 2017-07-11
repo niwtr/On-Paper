@@ -11,6 +11,7 @@
 #include "aruco/aruco.h"
 #include "Painter.h"
 #include "pdfreader.h"
+#include "glcanvas.h"
 #include <vector>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -48,8 +49,7 @@ namespace on_paper {
     constexpr const float a4_height = 0.297;
     //constexpr const float TheMarkerSize = 0.0290;
     constexpr const float TheMarkerSize = 0.0565;
-    constexpr const int enlarge_wheight = 640;
-    constexpr const int enlarge_wwidth = 480;
+
     constexpr const int special_page_start=1000;
 
     class ARCapturer {
@@ -63,7 +63,8 @@ namespace on_paper {
 
         vector<Marker> TheMarkers;
         vector< Marker > TheLastMarkers;
-        Rect last_rect;
+        Rect last_rect; //used for enlarge.
+        Mat last_roi;   //used for enlarge.
         Mat TheInputImageCopy;
         Mat VirtualPaperImage;
         CameraParameters CamParams;
@@ -75,7 +76,7 @@ namespace on_paper {
         Mat pdf_paper_image;
 
         Painter * pa_ptr;
-        bool need_white_transparent = true;
+
         int cur_page=0;
         /*
         const vector<Point2f> pattern_marker_source = {
@@ -135,6 +136,8 @@ namespace on_paper {
         const int& get_page(){return cur_page;}
         PDFReader& get_PDF_reader(){return this->PdfReader;}
         void read_pdf_archiv(string pdf_file);
+
+
     private:
 
         template<typename vecpf>
@@ -152,6 +155,8 @@ namespace on_paper {
 
 
         void set_original_paper_pattern();
+
+
 
 
     };

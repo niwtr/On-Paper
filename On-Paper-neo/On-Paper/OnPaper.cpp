@@ -39,8 +39,7 @@ void on_paper::OnPaper::init(){
     status=op_normal;
     TheCameraParameters.readFromXMLFile("./camera.yml");
     ac.init(TheCameraParameters);
-    //const Mat& img = ac.get_image();
-    //pa.init(img.rows, img.cols);
+
     af.initialize();
     ac.capture_Painter(&pa);
     af.capture_Painter(&pa);
@@ -75,7 +74,7 @@ cv::Mat &on_paper::OnPaper::process_one_frame()
 
 cv::Mat &on_paper::OnPaper::_process_normal()
 {
-    //try{
+    try{
 
         if(not ac.get_PDF_reader().is_loaded()) //no pdf is loaded.
             //TODO render"scan a book first".
@@ -90,7 +89,7 @@ cv::Mat &on_paper::OnPaper::_process_normal()
         struct Gesture gt = gj.get_gesture(TheInputImage);
         imshow("mask", gj.mask);
 
-
+/*
         if(gt.type==GestureType::NONE)
             cout<<"NONE"<<endl;
         if(gt.type==GestureType::ENLARGE)
@@ -99,7 +98,7 @@ cv::Mat &on_paper::OnPaper::_process_normal()
             cout<<"PRESS"<<endl;
         if(gt.type==GestureType::MOVE)
             cout<<"MOVE"<<endl;
-
+*/
         gt.type = gm->get_uber_gesture(gt.type); // let gm to rock.
 
 
@@ -188,6 +187,7 @@ cv::Mat &on_paper::OnPaper::_process_normal()
                         pa.draw_enlarged_rect(r);
                         ac.display_enlarged_area(r);
                         pa.text_broadcast("Enlarge.");
+
                     }
                 }
             }
@@ -210,11 +210,11 @@ cv::Mat &on_paper::OnPaper::_process_normal()
         lm.output(TheProcessedImage);
         putText(TheProcessedImage, anf, Point(0, TheProcessedImage.rows/10*7), CV_FONT_VECTOR0, 5, Scalar(0,255,0), 20,LINE_AA);
 
-   // }
-   //     catch (std::exception &ex)
-   //{
-   //     cout << "Exception :" << ex.what() << endl;
-   // }
+    }
+        catch (std::exception &ex)
+   {
+        cout << "Exception :" << ex.what() << endl;
+   }
     return this->TheProcessedImage;
 
 

@@ -13,7 +13,7 @@ struct on_paper::Gesture on_paper::GestureJudge::get_gesture(const cv::Mat& src)
 			gt.fingers.push_back(pt);
 	};
 
-	// judge gesture type by the number fingers
+    // judge gesture type by the number fingers
 	if (defects.size() > 1)
 	{
 		gt.type = MOVE;

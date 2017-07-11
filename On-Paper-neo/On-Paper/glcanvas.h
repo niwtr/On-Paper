@@ -21,6 +21,7 @@ public:
     void setImage(const QImage& image);
     void updateImage(const QImage& image);
     void imshow(const cv::Mat& image);//for guys familiar with cv.
+    inline void imshow_resized(const cv::Mat& image){ setFixedSize(image.cols, image.rows); this->imshow(image);}
     void register_mouseEvent_callbacks(string key, functor callback);
     void remove_mouseEvent_callbacks(string key);
     void mousePressEvent(QMouseEvent *event) override;

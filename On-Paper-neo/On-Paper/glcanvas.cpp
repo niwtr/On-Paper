@@ -5,13 +5,14 @@ using std::cout;using std::endl;
 GLCanvas::GLCanvas(QWidget* parent)
     : QOpenGLWidget(parent)
 {
-     setFixedSize(MAIN_WIDTH, MAIN_HEIGHT);
      setMouseTracking(true);
      _key=-1;
 }
 
 void GLCanvas::setImage(const QImage& image)
 {
+    if(img.size() != image.size())
+        setFixedSize(image.size().width(), image.size().height());
     img = image;
 }
 

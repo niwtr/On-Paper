@@ -44,6 +44,8 @@ namespace on_paper
         Mat transmatrix;
     private:
         Painter * pa_ptr;
+        int paper_width = 2480;
+        int paper_height = 3508;
         map<int,vector<Info>> json_parse;
         Mat picture;
         json j;
@@ -57,10 +59,12 @@ namespace on_paper
         }
         //at each time the page changes.
         void load_archiv_conf(archiv_conf acnf); // init the whole book.
+        inline void set_page_size(int w, int h){this->paper_width=w;this->paper_height=h;}
         inline void capture_Painter(Painter * pa){this->pa_ptr = pa;}
         void register_callbacks(void);
         void fire_event(vector<Point> figPs, Point &, int page);
         void call_paper_fun(string function_name, Info arg);
+        Point pixtransform(Point & p);
 
     private:
         void parseJson();

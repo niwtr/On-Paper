@@ -189,7 +189,7 @@ void on_paper::ARCapturer::fill_markers(void) {
 }
 
 void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
-    //do some anti-shape
+    //do some anti-shake
     if(utils::distance_P2P(Point(r.x, r.y), Point(last_rect.x, last_rect.y)) > 20) {
         Mat roi = Mat();
         if(r.x +r.width > pdf_paper_image.cols or
@@ -197,10 +197,24 @@ void on_paper::ARCapturer::display_enlarged_area(cv::Rect r) {
             return;
         pdf_paper_image(r).copyTo(roi);
         if(roi.cols<=0)return;
+        Mat roi_converted;
+        utils::tnerapsnart_etihw(roi, roi_converted);
+        roi=roi_converted;
         cv::resize(roi, roi, cv::Size(enlarge_wheight, enlarge_wwidth));
-        //cv::imshow("Scaled", roi);
+        last_roi=roi;
         last_rect = r;
     }
+
+    vector<vector<Point>> vpp;
+    vector<Point> vp;
+    vp.push_back(Point(0,0));
+    vp.push_back(Point(0,enlarge_wwidth));
+    vp.push_back(Point(enlarge_wheight,enlarge_wwidth));
+    vp.push_back(Point(enlarge_wheight,0));
+    vpp.push_back(vp);
+    fillPoly(TheInputImageCopy, vpp, Scalar(255,255,255),LINE_8, 0);
+    last_roi.copyTo(TheInputImageCopy(Rect(Point(0,0), Point(enlarge_wheight, enlarge_wwidth))));
+
 }
 
 
@@ -212,18 +226,20 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker)
     int id,page;
     string picname;
     cv::Mat img;
+
     for(auto& m : marker){
         id=m.id;
-        page=id/MARKERNUM +1;
+        page=id/MARKERNUM ;//+1; //modified
     }
+
 
     if(page!=cur_page && page < PdfReader.get_pagenum())
     {
         PdfReader.render_pdf_page(page);
-        need_white_transparent = false;
+
         cur_page=page;
         img=PdfReader.cv_get_pdf_image();
-        utils::white_transparent(img, img);            //outch!!!
+
         pa_ptr->init_canvas_of_page(cur_page,img.rows, img.cols);
     }
     else
@@ -234,11 +250,14 @@ cv::Mat on_paper::ARCapturer::pdfread(vector<aruco::Marker> marker)
 
 void on_paper::ARCapturer::read_pdf_archiv(string pdf_file)
 {
-    cout<<pdf_file<<endl;
+
+    this->cur_page = 0; // reset current page.
+
     PdfReader.load_pdf(QString::fromStdString(pdf_file));
     if(not PdfReader.render_pdf_page(0)) // get the page 0.
         exit(121); //ad hoc
     pdf_paper_image=PdfReader.cv_get_pdf_image();
+
 
     set_original_paper_pattern();
     pa_ptr->init(pdf_paper_image.rows, pdf_paper_image.cols);
@@ -254,6 +273,7 @@ void on_paper::ARCapturer::set_original_paper_pattern()
             Point2f(pdf_paper_image.cols, 0)
     };
 }
+
 
 
 #undef distance

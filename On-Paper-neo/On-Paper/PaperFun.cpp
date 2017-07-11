@@ -28,7 +28,7 @@ void on_paper::PaperFun::load_archiv_conf(archiv_conf acnf)
             parseJson();
         }
     }
-    catch(...){
+    catch(std::exception & e){
 
     }
 
@@ -36,6 +36,7 @@ void on_paper::PaperFun::load_archiv_conf(archiv_conf acnf)
 
 void on_paper::PaperFun::parseJson()
 {
+
     Info info;
     vector<Info> v_info;
     int page;
@@ -79,20 +80,16 @@ void on_paper::PaperFun::transform_point(Point& p){
 }
 
 void on_paper::PaperFun::fire_event(vector<Point> figPs, Point &figP,int page) {
+
     figP=Point(0,0);
     vector<Info> x_info;
     x_info=json_parse[page];
-    cout<<page<<endl;
+
     //for(vector<Info>::iterator iter=x_info.begin();iter!=x_info.end();iter++)
     //{
     //    cout<<iter->tl<<iter->br<<endl;
     //}
-    for(auto x : x_info){
-        cout<<x.tl<<endl;
-    }
-    cout<<j.size()<<endl;
-    cout<<x_info.size()<<endl;
-    cout<<json_parse.size()<<endl;
+
     if(!j.empty())
     {
 
@@ -104,17 +101,20 @@ void on_paper::PaperFun::fire_event(vector<Point> figPs, Point &figP,int page) {
             v_info=json_parse[page];
             for(vector<Info>::iterator iter=v_info.begin();iter!=v_info.end();iter++)
             {
-                cout<<iter->tl<<iter->br<<endl;
 
-                pa_ptr->draw_enlarged_rect(Rect(iter->tl, iter->br));
+                Point trans_tl,trans_br;
+                trans_tl=pixtransform(iter->tl);
+                trans_br=pixtransform(iter->br);
 
-                if(judgeIn(figP,iter->tl,iter->br))
+                pa_ptr->draw_enlarged_rect(Rect(trans_tl, trans_br));
+
+                if(judgeIn(figP,trans_tl, trans_br))
                 {
                     string function = iter->function;
                     iter->finger = figP;
                     //take that elegance.
                     call_paper_fun(function, *iter);
-                    cout<<"yes"<<endl;
+
                     break;
                 }
             }
@@ -127,7 +127,18 @@ void on_paper::PaperFun::fire_event(vector<Point> figPs, Point &figP,int page) {
 bool on_paper::PaperFun::judgeIn(cv::Point p, cv::Point tl, cv::Point br) {
     return p.x > tl.x and p.x < br.x and p.y < br.y and p.y > tl.y;
 }
-
+#define PAPERWIDTH 2480
+#define PAPERHEIGHT 3508
+cv::Point on_paper::PaperFun::pixtransform(cv::Point &p)
+{
+    int canvas_col,canvas_row;
+    Point t_p;
+    canvas_col=pa_ptr->get_temp_canvas().cols;//get_canvas_layer().cols;
+    canvas_row=pa_ptr->get_temp_canvas().rows;//get_canvas_layer().rows;
+    t_p.x=(float)p.x/PAPERWIDTH*canvas_col;
+    t_p.y=(float)p.y/PAPERHEIGHT*canvas_row;
+    return t_p;
+}
 void on_paper::PaperFun::call_paper_fun(string function_name, Info arg) {
     auto bind = this->_fnmap.find(function_name);
     if(bind != this->_fnmap.end()) //gotcha!!

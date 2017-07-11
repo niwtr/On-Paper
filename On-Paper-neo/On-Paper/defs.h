@@ -50,7 +50,9 @@
 
 //archiver.h
 #define ARCHIVE_PREFIX "/home/heranort/onpaper_archiv/"
+//#define ARCHIVE_PREFIX "/home/heranort/下载/example/"
 #define METAFILE_PATH "/home/heranort/archiv.json"
-
-
+//arcapturer.h
+#define enlarge_wheight 320
+#define enlarge_wwidth 240
 #endif // DEFS_H

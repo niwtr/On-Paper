@@ -144,22 +144,39 @@ namespace on_paper{
 
         static void white_transparent(const Mat & src, Mat& dst){
             cv::cvtColor(src, dst, CV_BGR2BGRA);
+            cv::cvtColor(src,dst, CV_BGRA2RGBA);
             // find all white pixel and set alpha value to zero:
             for (int y = 0; y < dst.rows; ++y)
                 for (int x = 0; x < dst.cols; ++x)
                 {
                     cv::Vec4b & pixel = dst.at<cv::Vec4b>(y, x);
                     // if pixel is white
-                    if((abs(pixel[0]-pixel[1])+abs(pixel[1]-pixel[2])+abs(pixel[2]-pixel[0]))
-                            > 50)
-                        continue;
-                    if (pixel[0] > 180 && pixel[1] > 180 && pixel[2] > 180)
+                    //if((abs(pixel[0]-pixel[1])+abs(pixel[1]-pixel[2])+abs(pixel[2]-pixel[0]))
+                     //       > 50)
+                      //  continue;
+                    if (pixel[0] > 240 && pixel[1] >240 && pixel[2] > 240)
                     {
                         // set alpha to zero:
                         pixel[3] = 0;
                     }
                 }
         }
+
+        //inverse of white_transparent.
+        static void tnerapsnart_etihw(const Mat & src, Mat& dst){
+            cvtColor(src, dst, CV_BGRA2BGR);
+            for (int y = 0; y < dst.rows; ++y)
+                for (int x = 0; x < dst.cols; ++x)
+                {
+                    const Vec4b & pixel0 = src.at<cv::Vec4b>(y,x);
+                    cv::Vec3b & pixel = dst.at<cv::Vec3b>(y, x);
+                    if(pixel0[3]==0)
+                    {
+                        pixel[0]=255;pixel[1]=255;pixel[2]=255;
+                    }
+                }
+        }
+
 
         static void overlay_BGRA(const Mat &background, const Mat &foreground,
                      Mat &output, Point2i location) {

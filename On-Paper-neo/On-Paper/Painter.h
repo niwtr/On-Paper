@@ -26,6 +26,7 @@ namespace on_paper {
     using cv::Point;
     class Painter {
 
+
     private:
         //canvas是当前工作中的画布。
         //canvas_container是画布的容器。
@@ -62,6 +63,7 @@ namespace on_paper {
     public:
 
         inline Mat& get_canvas_layer() { return this->canvas_layer; }
+        inline Mat& get_temp_canvas(){return this->temp_canvas;}
         Mat get_temp_canvas_layer();
         Painter(){}
 
@@ -79,7 +81,6 @@ namespace on_paper {
         //must ensure the transmatrix is not empty first.
         void transform_point(Point& p);
 
-
         Point kalman_smooth(const Point &p);
 
         void kalman_trace(Point p, bool drawp);
@@ -88,6 +89,7 @@ namespace on_paper {
         //on temp
         void paste_temp_pic(Mat pic, Point center);
         inline void draw_enlarged_rect(Rect r){ rectangle(temp_canvas, r, Scalar(0,255,255), 14); }
+
         void draw_finger_tips(vector<Point> fingers, int size, Scalar c);
         void text_broadcast(string str);
     };

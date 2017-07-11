@@ -9,6 +9,7 @@
 #include <QApplication>
 #include <QWidget>
 #include <QDesktopWidget>
+
 namespace on_paper {
 class PDFReader
 {
@@ -23,6 +24,7 @@ public:
     void shrink();
     void move_page(int movex,int movey);
     int get_pagenum(){return page_nums;}
+    QSize get_page_size(){return page_size;}
 private:
     QString pdf_path;
     QSize page_size;

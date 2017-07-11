@@ -12,8 +12,8 @@ on_paper::PDFReader::PDFReader()
     page_nums=0;
     magnification_coe=1;                          //放大系数
    // desk_piX=QApplication::desktop()->physicalDpiX();//所采像素密度
-  // desk_piY=QApplication::desktop()->physicalDpiY();
-    desk_piX=300;desk_piY=300;
+      // desk_piY=QApplication::desktop()->physicalDpiY();
+    desk_piX=200;desk_piY=200;
     imageX=0;                                       //默认pdf渲染图片的位置
     imageY=0;
 }
@@ -51,6 +51,7 @@ bool on_paper::PDFReader::render_pdf_page(int page_num)
         //doc->setPaperColor(Qt::transparent);
         doc->setRenderHint(Poppler::Document::TextAntialiasing);
         //doc->setRenderHint(Poppler::Document::Antialiasing);
+        doc->setRenderHint(Poppler::Document::IgnorePaperColor);
         doc->setRenderBackend((Poppler::Document::RenderBackend)0);//splash
         //doc->setRenderBackend(Poppler::Document::ArthurBackend);
 
@@ -61,9 +62,11 @@ bool on_paper::PDFReader::render_pdf_page(int page_num)
             return false;
         }
 
+
         //生成pdf渲染图像
         image = pdfPage->renderToImage(desk_piX*magnification_coe, desk_piY*magnification_coe, -1, -1, -1, -1) ;
 
+        page_size=pdfPage->pageSize();
         // after the usage, the page must be deleted
         delete pdfPage;
 
