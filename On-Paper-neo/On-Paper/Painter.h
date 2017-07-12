@@ -66,7 +66,7 @@ namespace on_paper {
         inline Mat& get_canvas_layer() { return this->canvas_layer; }
         inline Mat& get_temp_canvas(){return this->temp_canvas;}
         Mat get_temp_canvas_layer();
-        Painter(){}
+        Painter(){ isfirst=true;}
 
         // M: inverted, from real to image.
         inline void with_transmatrix(const Mat &M){this->transmatrix=M;}
@@ -76,6 +76,7 @@ namespace on_paper {
         void initKF();
         void init(int rows, int cols);
 
+        bool isfirst;
         void init_canvas_of_page(int npage, int canv_height, int canv_width);
 
         void draw_line_simple(Point p, Scalar c);

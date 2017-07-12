@@ -7,7 +7,7 @@
 
 void on_paper::OnPaper::camera_start()
 {
-    TheVideoCapturer.open(0);
+    TheVideoCapturer.open(1);
 
     TheVideoCapturer.set(CV_CAP_PROP_FRAME_WIDTH, MAIN_WIDTH);
     TheVideoCapturer.set(CV_CAP_PROP_FRAME_HEIGHT, MAIN_HEIGHT);
@@ -109,7 +109,7 @@ cv::Mat &on_paper::OnPaper::_process_normal()
         if(mknum == 0) return TheInputImage;
 
         struct Gesture gt = gj.get_gesture(TheInputImage);
-        imshow("mask", gj.mask);
+//        imshow("mask", gj.mask);
 /*
 
         if(gt.type==GestureType::NONE)

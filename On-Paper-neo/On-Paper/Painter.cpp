@@ -40,9 +40,13 @@ void on_paper::Painter::initKF(){
     setIdentity(KF.errorCovPost, Scalar::all(.1));
 }
 void on_paper::Painter::init(int rows, int cols) {
+
+    if(isfirst){
     Scalar line_color = Scalar(255, 255, 0);
     this->set_color(line_color);
     this->set_pen_size(5);
+    isfirst=false;
+    }
     this->canv_height = rows;
     this->canv_width = cols;
     this->canvas = Mat::zeros(rows, cols, CV_8UC3);

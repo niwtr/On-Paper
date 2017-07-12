@@ -25,7 +25,7 @@ OnPaperMain::OnPaperMain(OnPaper * op, QWidget *parent) :
     ui->progressBar->setRange(0, 100);
     ui->progressBar->setValue(0);
     showing=true;
-    this->setWindowFlags(Qt::FramelessWindowHint);
+    //this->setWindowFlags(Qt::FramelessWindowHint);
 }
 
 void OnPaperMain::msg_broadcast(string msg)

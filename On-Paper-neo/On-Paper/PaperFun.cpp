@@ -186,7 +186,7 @@ void on_paper::PaperFun::register_callbacks(void) {
             [&](Info i){
                 auto tool = i.data;
                 if(tool == "pencil") {
-                    pa_ptr->set_color(Scalar(255, 255, 255));
+                    pa_ptr->set_color(Scalar(255, 255, 0));
                     pa_ptr->set_pen_size(10);
                     msg="Picked up pencil.";
                 }
