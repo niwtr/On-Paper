@@ -6,8 +6,9 @@ OnPaperMain::OnPaperMain(OnPaper * op, QWidget *parent) :
     ui(new Ui::OnPaperMain)
 {
     ui->setupUi(this);
+    this->ui->centralWidget->setFixedSize(MAIN_WIDTH, MAIN_HEIGHT);
     setFixedSize(MAIN_WIDTH, MAIN_HEIGHT);
-    this->centralWidget()->setFixedSize(MAIN_WIDTH, MAIN_HEIGHT);
+    this->ui->gl_canv->setFixedSize(MAIN_WIDTH, MAIN_HEIGHT);
 
     this->opptr = op;
     this->opptr->register_callback("msg", [this](__w_callback_arg arg){

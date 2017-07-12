@@ -101,7 +101,7 @@ void on_paper::PaperFun::fire_event(vector<Point> figPs, Point &figP,int page) {
                 trans_br=pixtransform(iter->br);
 
                 //pa_ptr->draw_enlarged_rect(Rect(trans_tl, trans_br));
-                pa_ptr->draw_rect(Rect(trans_tl, trans_br), Scalar(0,0,255), 4);
+                //pa_ptr->draw_rect(Rect(trans_tl, trans_br), Scalar(0,0,255), 4);
                 if(judgeIn(figP,trans_tl, trans_br))
                 {
                     string function = iter->function;

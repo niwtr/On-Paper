@@ -98,7 +98,7 @@ cv::Mat &on_paper::OnPaper::_process_normal()
 
 
         if(not ac.get_PDF_reader().is_loaded()) //no pdf is loaded.
-            //TODO render"scan a book first".
+            //TODO render"
             return TheInputImage;
 
 
@@ -282,7 +282,7 @@ cv::Mat &on_paper::OnPaper::_process_barcode()
         af.load_archiv_conf(aconf);
         this->status = op_normal;
         //this->last_good_barcode = barcode;
-        warg._string="Scanning markers ...";
+        warg._string="Picked up: "+aconf.name;
         wcall("msg", warg);
 
         if(aconf.type=="special")
